@@ -6,7 +6,7 @@ use kanakanjiconverter\PHPKanaKanjiConverter;
 
 include __DIR__ . '/vendor/autoload.php';
 
-$input = "kinouhasukiyakiwotabemasita";
+$input = "atarasiipurojekutowokaihatsuchuudesu";
 $converter = new PHPKanaKanjiConverter();
 $a = $converter->convert($input);
 echo $a["best"]["text"], "\n";

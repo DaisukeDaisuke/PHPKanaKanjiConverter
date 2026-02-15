@@ -34,6 +34,7 @@ final class PHPKanaKanjiConverter{
 	 */
 	public function convert(string $input, int $numofbest = 3) : array{
 		$input = $this->romaji->toHiragana($input);
+		var_dump($input);
 		return $this->kannziconverter->convert($input, $numofbest);
 	}
 }

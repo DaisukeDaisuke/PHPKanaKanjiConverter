@@ -23,7 +23,7 @@ $testWords = [
 	"korehakanawokanjinihenkansurutesutodesu",
 	"konosukuriputohabenchima-kudesu",
 	"nihonnojuuyounabunkawoookumanabimasu",
-	"atarashipurojekutowokaihatsuchuudesu",
+	"atarasiipurojekutowokaihatsuchuudesu",
 	"saikinnopasokonhaseinougaiidesu",
 	"kanakanjikonnba-ta-notesutowoshiteimasu",
 	"nagairo-majibunnwokousokudekenshoushimasu",
