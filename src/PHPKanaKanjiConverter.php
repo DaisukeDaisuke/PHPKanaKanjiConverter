@@ -59,6 +59,21 @@ final class PHPKanaKanjiConverter{
 		return false;
 	}
 
+	public function hasBOS(array $result) : bool{
+		if(!isset($result["best"]["tokens"])){
+			return true;
+		}
+		foreach ($result["best"]["tokens"] as $t) {
+			if(!isset($t["pos"])){
+				return true;
+			}
+			if ($t["pos"] === "BOS/EOS") {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public function getRomajiConverter() : ConvertibleRomaji{
 		return $this->romaji;
 	}

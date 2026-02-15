@@ -9,7 +9,7 @@ include __DIR__ . '/vendor/autoload.php';
 $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
 
-$input = "sinnkannsenn";
+$input = "うちゅうじん";
 $converter = new PHPKanaKanjiConverter();
 $a = $converter->convert($input, false);
 echo $a["best"]["text"], "\n";
