@@ -66,42 +66,34 @@ final class KanaKanjiConverter
 		];
 	}
 
-	/**
-	 * dictionary00.txt から dictionary09.txt を順に読み、
-	 * 各行の reading が $hiragana の中に現れるか (mb_strpos === not false) をチェックしてマッチするエントリを追加する。
-	 * 重複は排除せずそのまま候補として残す。
-	 *
-	 * 戻り値: ['reading' => [entry, entry, ...], ...]
-	 */
 	private function collectEntriesFromDictionaries(string $hiragana): array
 	{
 		$result = [];
-
 		$baseDir = dirname($this->dictFile);
+
 		for ($i = 0; $i <= 9; $i++) {
 			$fname = $baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
 
-			if(!isset($this->fileCache[$fname])){
-				if (!is_file($fname)) {
-					continue;
-				}
-				$this->fileCache[$fname] = file($fname, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			if (!is_file($fname)) {
+				continue;
 			}
 
-			foreach($this->fileCache[$fname] as $line){
-				$line = rtrim($line, "\r\n");
-				if ($line === '') {
-					continue;
+			if (!isset($this->fileCache[$fname])) {
+				$lines = file($fname, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+				$parsed = [];
+				foreach ($lines as $line) {
+					$entry = $this->parseDictionaryLine($line);
+					if ($entry !== null) {
+						$parsed[] = $entry;
+					}
 				}
 
-				$entry = $this->parseDictionaryLine($line);
-				if ($entry === null) {
-					continue;
-				}
+				$this->fileCache[$fname] = $parsed;
+			}
 
-				// 指定どおり strpos 相当で検出（マルチバイトに対応するため mb_strpos を用いる）
-				// 見つかったらそのまま追加（重複は排除しない）
-				if (mb_strpos($hiragana, $entry['reading'], 0, 'UTF-8') !== false) {
+			foreach ($this->fileCache[$fname] as $entry) {
+				if (strpos($hiragana, $entry['reading']) !== false) {
 					$result[$entry['reading']][] = $entry;
 				}
 			}
@@ -109,6 +101,8 @@ final class KanaKanjiConverter
 
 		return $result;
 	}
+
+
 
 	private function parseDictionaryLine(string $line): ?array
 	{
@@ -419,17 +413,25 @@ final class KanaKanjiConverter
 			return;
 		}
 
-		$size = (int)trim($lines[0]);
+		$rawSize = trim($lines[0]);
+		$rawSize = ltrim($rawSize, "\xEF\xBB\xBF");
+		$size = (int)$rawSize;
 		if ($size <= 0) {
+			return;
+		}
+		$lineCount = count($lines) - 1;
+		$matrixSize = $this->resolveConnectionSize($size, $lineCount);
+		var_dump($matrixSize);
+		if ($matrixSize <= 0) {
 			return;
 		}
 
 		// 既に size がセットされていなければ設定。異なる size の場合は既存マップをクリアして再構築。
 		if ($this->connectionSize <= 0) {
-			$this->connectionSize = $size;
-		} elseif ($this->connectionSize !== $size) {
+			$this->connectionSize = $matrixSize;
+		} elseif ($this->connectionSize !== $matrixSize) {
 			$this->connectionCostMap = [];
-			$this->connectionSize = $size;
+			$this->connectionSize = $matrixSize;
 		}
 
 		// ラティスに必要な接続インデックス（キー配列）を取得
@@ -455,25 +457,42 @@ final class KanaKanjiConverter
 
 		// ファイルの 2 行目以降が接続コストの一次元配列（インデックス 0 に対応）なので、
 		// ファイルを走査して missing に含まれる行だけ読み込む
-		$currentIndex = 0; // file line 1 => index 0
-		foreach ($lines as $key => $line) {
-			if ($key === 0) {
-				// 先頭行はサイズなのでスキップ（$currentIndex はまだ 0 のまま）
-				continue;
-			}
 
-			if (isset($missing[$currentIndex])) {
-				$this->connectionCostMap[$currentIndex] = (int)trim($line);
-				unset($missing[$currentIndex]);
+		foreach ($missing as $idx => $_) {
+			$lineNumber = $idx + 1; // 1行目はサイズなので +1
 
-				if (empty($missing)) {
-					break;
-				}
+			if (isset($lines[$lineNumber])) {
+				$this->connectionCostMap[$idx] = (int)trim($lines[$lineNumber]);
+			} else {
+				throw new \RuntimeException("connection file is broken");
 			}
-			$currentIndex++;
 		}
 
 		$this->connectionLoaded = true;
+	}
+
+	private function resolveConnectionSize(int $reportedSize, int $lineCount): int
+	{
+		if ($reportedSize <= 0) {
+			return 0;
+		}
+
+		$expected = $reportedSize * $reportedSize;
+		if ($lineCount === $expected) {
+			return $reportedSize;
+		}
+
+		$plusOne = ($reportedSize + 1) * ($reportedSize + 1);
+		if ($lineCount === $plusOne) {
+			return $reportedSize + 1;
+		}
+
+		$root = (int)floor(sqrt((float)$lineCount));
+		if ($root > 0 && $root * $root === $lineCount) {
+			return $root;
+		}
+
+		return $reportedSize;
 	}
 
 	private function collectConnectionIndices(array $lattice, int $size): array
