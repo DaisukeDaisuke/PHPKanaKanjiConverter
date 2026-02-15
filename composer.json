@@ -1,5 +1,5 @@
 {
-    "name": "owner/untitled3",
+    "name": "daisukedaisuke/PHPKanaKanjiConverter",
     "license": "mit",
     "autoload": {
         "psr-4": {
