@@ -1,6 +1,7 @@
 {
     "name": "daisukedaisuke/kanakanjiconverter",
     "type": "library",
+    "description": "Vibe coded romaji to hiragana to kanji conversion",
     "license": "mit",
     "autoload": {
         "psr-4": {
