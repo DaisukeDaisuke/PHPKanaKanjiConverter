@@ -40,7 +40,7 @@ final class PHPKanaKanjiConverter{
 	}
 
 	public function isValid(array $result) : bool{
-		if(isset($result["best"]["tokens"])){
+		if(!isset($result["best"]["tokens"])){
 			return false;
 		}
 		foreach ($result["best"]["tokens"] as $t) {
