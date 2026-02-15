@@ -43,7 +43,6 @@ final class PHPKanaKanjiConverter{
 		if(isset($result["best"]["tokens"])){
 			return false;
 		}
-		$valid = false;
 		foreach ($result["best"]["tokens"] as $t) {
 			if(!isset($t["pos"]) || !isset($t["subpos"])){
 				return false;
