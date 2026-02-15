@@ -31,29 +31,6 @@ echo $a["best"]["text"], "\n";
 今日の天気は晴れで，今日の昼食はアイスです！
 ```
 
-# caution
-
-## May often give incorrect results
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use kanakanjiconverter\PHPKanaKanjiConverter;
-
-include __DIR__ . '/vendor/autoload.php';
-
-$input = "kinouhasukiyakiwotabemasita";
-$converter = new PHPKanaKanjiConverter();
-$a = $converter->convert($input);
-echo $a["best"]["text"], "\n";
-
-foreach ($a["candidates"] as $candidate) {
-	echo $candidate["text"], "\n";
-}
-```
-
 
 ### result
 
@@ -91,151 +68,150 @@ echo $a["best"]["text"], "\n";
 # benchmark
 
 ```
-string(57) "きょうのてんきははれですごしやすいです"
-今日の天気は晴れで過ごしやすいです
 Input: kilyounotennkihaharedesugoshiyasuidesu
-Convert time: 49.514055252075 ms
+nihonngo: きょうのてんきははれですごしやすいです
+今日の天気は晴れで過ごしやすいです
+Convert time: 54.537057876587 ms
 
-string(60) "わたしはにほんごのべんきょうをしています"
-私は日本語の勉強をしています
 Input: watashihanihongonobenkyouwoshiteimasu
-Convert time: 16.273975372314 ms
+nihonngo: わたしはにほんごのべんきょうをしています
+私は日本語の勉強をしています
+Convert time: 15.737056732178 ms
 
-string(57) "あしたはともだちととうきょうにいきます"
-明日は友達と東京に行きます
 Input: ashitahatomodachitotoukyouniikimasu
-Convert time: 27.282953262329 ms
+nihonngo: あしたはともだちととうきょうにいきます
+明日は友達と東京に行きます
+Convert time: 26.669025421143 ms
 
-string(63) "これはかなをかんじにへんかんするてすとです"
-これはカナを感じに変換するテストです
 Input: korehakanawokanjinihenkansurutesutodesu
-Convert time: 22.221088409424 ms
+nihonngo: これはかなをかんじにへんかんするてすとです
+これはカナを感じに変換するテストです
+Convert time: 21.369934082031 ms
 
-string(48) "このすくりぷとはべんちまーくです"
-このスクリプトはベンチマークです
 Input: konosukuriputohabenchima-kudesu
-Convert time: 7.1070194244385 ms
+nihonngo: このすくりぷとはべんちまーくです
+このスクリプトはベンチマークです
+Convert time: 7.1561336517334 ms
 
-string(66) "にほんおじゅうようなぶんかをおおくまなびます"
-日本お重要な文化を多く学びます
 Input: nihonnojuuyounabunkawoookumanabimasu
-Convert time: 19.716024398804 ms
+nihonngo: にほんおじゅうようなぶんかをおおくまなびます
+日本お重要な文化を多く学びます
+Convert time: 19.139051437378 ms
 
-string(63) "あたらしいぷろじぇくとをかいはつちゅうです"
-新しいプロジェクトを開発中です
 Input: atarasiipurojekutowokaihatsuchuudesu
-Convert time: 16.783952713013 ms
+nihonngo: あたらしいぷろじぇくとをかいはつちゅうです
+新しいプロジェクトを開発中です
+Convert time: 16.45302772522 ms
 
-string(57) "さいきんおぱそこんはせいのうがいいです"
-最近おパソコンは性能が良いです
 Input: saikinnopasokonhaseinougaiidesu
-Convert time: 28.454065322876 ms
+nihonngo: さいきんおぱそこんはせいのうがいいです
+最近おパソコンは性能が良いです
+Convert time: 27.8160572052 ms
 
-string(63) "かなかんじこんばーたーのてすとをしています"
-かな漢字コンバーターのテストをしています
 Input: kanakanjikonnba-ta-notesutowoshiteimasu
-Convert time: 33.342123031616 ms
+nihonngo: かなかんじこんばーたーのてすとをしています
+かな漢字コンバーターのテストをしています
+Convert time: 32.999038696289 ms
 
-string(69) "ながいろーまじぶんをこうそくでけんしょうします"
-長いローマ字分を高速で検証します
 Input: nagairo-majibunnwokousokudekenshoushimasu
-Convert time: 40.879011154175 ms
+nihonngo: ながいろーまじぶんをこうそくでけんしょうします
+長いローマ字分を高速で検証します
+Convert time: 40.204048156738 ms
 
-string(51) "きのうのぷろじぇくとをすいしんする"
-昨日のプロジェクトを推進する
 Input: kinounopurozilylekutowosuisinnsuru
-Convert time: 17.14301109314 ms
+nihonngo: きのうのぷろじlyぇくとをすいしんする
+昨日のプロジlyぇクトを推進する
+Convert time: 17.627954483032 ms
 
-string(51) "きのうのよるごはんは，すきやきです"
-昨日の夜ご飯は，すき焼きです
 Input: kinounoyorugohannha,sukiyakidesu
-Convert time: 13.586044311523 ms
+nihonngo: きのうのよるごはんは，すきやきです
+昨日の夜ご飯は，すき焼きです
+Convert time: 14.137983322144 ms
 
-string(18) "あしたのあさ"
-明日の朝
 Input: asitanoasa
-Convert time: 3.5469532012939 ms
+nihonngo: あしたのあさ
+明日の朝
+Convert time: 3.0620098114014 ms
 
-string(42) "きのうのかいぎをかいさいした"
-昨日の会議を開催した
 Input: kinounokaigiwokaisaisita
-Convert time: 23.138046264648 ms
+nihonngo: きのうのかいぎをかいさいした
+昨日の会議を開催した
+Convert time: 22.455930709839 ms
 
-string(18) "いまのじだい"
-今の時代
 Input: imanozidai
-Convert time: 3.284215927124 ms
+nihonngo: いまのじだい
+今の時代
+Convert time: 3.3860206604004 ms
 
-string(30) "まいにちをたいせつに"
-毎日を大切に
 Input: mainitiwotaisetuni
-Convert time: 6.9200992584229 ms
+nihonngo: まいにちをたいせつに
+毎日を大切に
+Convert time: 6.9539546966553 ms
 
-string(12) "きかいは"
-機会は
 Input: kikaiha
-Convert time: 8.7289810180664 ms
+nihonngo: きかいは
+機会は
+Convert time: 8.5809230804443 ms
 
-string(9) "たいき"
-待機
 Input: taiki
-Convert time: 4.8410892486572 ms
+nihonngo: たいき
+待機
+Convert time: 4.7600269317627 ms
 
-string(21) "もっときれいに"
-もっとキレイに
 Input: mottokireini
-Convert time: 10.550022125244 ms
+nihonngo: もっときれいに
+もっとキレイに
+Convert time: 10.912895202637 ms
 
-string(18) "はなしがある"
-話がある
 Input: hanasigaaru
-Convert time: 3.870964050293 ms
+nihonngo: はなしがある
+話がある
+Convert time: 3.8678646087646 ms
 
-string(21) "さんにんでいく"
-3人で行く
 Input: sannninndeiku
-Convert time: 4.0280818939209 ms
+nihonngo: さんにんでいく
+3人で行く
+Convert time: 3.9899349212646 ms
 
-string(12) "とうきゅ"
-当キュ
-Input: toukilyu
-Convert time: 5.18798828125 ms
+Input: toukilyuu
+nihonngo: とうきゅう
+東急
+Convert time: 7.1439743041992 ms
 
-string(30) "きのうがすぐれている"
-機能が優れている
 Input: kinougasugureteiru
-Convert time: 6.5081119537354 ms
+nihonngo: きのうがすぐれている
+機能が優れている
+Convert time: 6.483793258667 ms
 
-string(24) "あたらしいきかく"
-新しい企画
 Input: atarasiikikaku
-Convert time: 16.986131668091 ms
+nihonngo: あたらしいきかく
+新しい企画
+Convert time: 16.777992248535 ms
 
-string(18) "おおきなかぶ"
-大きな株
 Input: ookinakabu
-Convert time: 11.334180831909 ms
+nihonngo: おおきなかぶ
+大きな株
+Convert time: 11.013984680176 ms
 
-string(18) "てれびをみる"
-テレビを見る
 Input: terebiwomiru
-Convert time: 1.3740062713623 ms
+nihonngo: てれびをみる
+テレビを見る
+Convert time: 1.1301040649414 ms
 
-string(27) "かんしゃされている"
-感謝されている
 Input: kannsilyasareteiru
-Convert time: 8.1348419189453 ms
+nihonngo: かんしゃされている
+感謝されている
+Convert time: 8.4738731384277 ms
 
-string(18) "きのうたべた"
-昨日食べた
 Input: kinoutabeta
-Convert time: 4.2438507080078 ms
+nihonngo: きのうたべた
+昨日食べた
+Convert time: 4.0340423583984 ms
 
-=========================
-Preload time: 1.5549659729004 ms
-Average convert time (10 AI words): 14.820746013096 ms
-113.70761108398 MB
-111.71558380127 MB
+Input: suuzinotesuto1234567890tesuto
+nihonngo: すうじのてすと1234567890てすと
+数字のテスト1234567890テスト
+Convert time: 5.9258937835693 ms
 ```
 
 

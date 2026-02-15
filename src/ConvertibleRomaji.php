@@ -179,7 +179,7 @@ class ConvertibleRomaji{
 	 *
 	 * $removeIllegalFlag: true の場合、変換できなかった文字は削る
 	 */
-	public function toHiragana(string $originText, $removeIllegalFlag = true){
+	public function toHiragana(string $originText,bool $removeIllegalFlag = true){
 		// 正規化: マクロン（ō 等） -> ou / uu のように簡易変換
 		$norm = str_replace(
 			['ā', 'ī', 'ū', 'ē', 'ō', 'Ā', 'Ī', 'Ū', 'Ē', 'Ō'],

@@ -24,15 +24,18 @@ final class PHPKanaKanjiConverter{
 		$this->kannziconverter = new KanaKanjiConverter($dictDir);
 	}
 
+
 	/**
-	 * Converts a given Romaji input string into Hiragana and performs a KanaKanji conversion to return the best matching results.
+	 * Converts the provided input string into Hiragana and then performs a Kana-Kanji conversion.
 	 *
-	 * @param string $input The input string in Romaji to be converted.
-	 * @param int $numofbest Specifies the number of best matching results to return.
-	 * @return array{best: array{text: string, tokens: array<int, array{surface: string, reading: string, word_cost: string, penalty: string}>}, cost: int, candidates: list<array{surface: string, reading: string, word_cost: string, penalty: string}>} An array of the best matching conversion results.
+	 * @param string $input The input string to be converted.
+	 * @param bool $removeIllegalFlag Optional flag to remove illegal characters during conversion. Default is false.
+	 * @param int $numofbest The number of best conversion results to return. Default is 3.
+	 *
+	 * @return array An array of conversion results after performing Kana-Kanji conversion.
 	 */
-	public function convert(string $input, int $numofbest = 3) : array{
-		$input = $this->romaji->toHiragana($input);
+	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3) : array{
+		$input = $this->romaji->toHiragana($input, $removeIllegalFlag);
 		return $this->kannziconverter->convert($input, $numofbest);
 	}
 }

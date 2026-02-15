@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use kanakanjiconverter\PHPKanaKanjiConverter;
+use kanakanjiconverter\ConvertibleRomaji;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -45,6 +46,7 @@ $testWords = [
 	"terebiwomiru",
 	"kannsilyasareteiru",
 	"kinoutabeta",
+	"suuzinotesuto1234567890tesuto"
 ];
 
 /* =========================
@@ -61,16 +63,20 @@ $preloadTime = $endPreload - $startPreload;
  * ========================= */
 $totalConvertTime = 0.0;
 
+$kana = new ConvertibleRomaji();
+
 foreach ($testWords as $input) {
 	$start = microtime(true);
 	$a = $converter->convert($input);
-	echo $a["best"]["text"], "\n";
+
 	$end = microtime(true);
 
 	$elapsed = $end - $start;
 	$totalConvertTime += $elapsed;
 
 	echo "Input: {$input}\n";
+	echo "nihonngo: " . $kana->toHiragana($input, false) . "\n";
+	echo $a["best"]["text"], "\n";
 	echo "Convert time: " . ms($elapsed) . " ms\n\n";
 }
 

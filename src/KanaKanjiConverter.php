@@ -101,6 +101,7 @@ final class KanaKanjiConverter
 
 		// entriesByReading のキーは reading、値は entry の配列
 		foreach ($entriesByReading as $reading => $entries) {
+			$reading = (string) $reading;
 			$readingLen = mb_strlen($reading, 'UTF-8');
 			$offset = 0;
 

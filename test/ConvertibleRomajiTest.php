@@ -84,6 +84,7 @@ class ConvertibleRomajiTest extends TestCase{
 		$this->assertSame('あん',     $this->romaji->toHiragana('ann'));
 		// n + 子音 → ん確定
 		$this->assertSame('あんか',   $this->romaji->toHiragana('anka'));
+		$this->assertSame('1234567890',   $this->romaji->toHiragana('1234567890', false));
 	}
 
 	public function testLongVowelMark() : void{
