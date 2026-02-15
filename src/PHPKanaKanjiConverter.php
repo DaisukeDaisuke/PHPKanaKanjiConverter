@@ -39,6 +39,27 @@ final class PHPKanaKanjiConverter{
 		return $this->kannziconverter->convert($input, $numofbest);
 	}
 
+	public function isValid(array $result) : bool{
+		if(isset($result["best"]["tokens"])){
+			return false;
+		}
+		$valid = false;
+		foreach ($result["best"]["tokens"] as $t) {
+			if(!isset($t["pos"]) || !isset($t["subpos"])){
+				return false;
+			}
+			if ($t["pos"] === "名詞" && $t["subpos"] !== "非自立") {
+				$valid = true;
+			}
+
+			if (in_array($t["pos"], ["動詞", "形容詞"])) {
+				$valid = true;
+			}
+		}
+
+		return $valid;
+	}
+
 	public function getRomajiConverter() : ConvertibleRomaji{
 		return $this->romaji;
 	}
