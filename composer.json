@@ -1,10 +1,13 @@
 {
-    "name": "daisukedaisuke/phpkanakanjiconverter",
+    "name": "daisukedaisuke/kanakanjiconverter",
+    "type": "library",
     "license": "mit",
     "autoload": {
         "psr-4": {
             "kanakanjiconverter\\": "src/"
         }
     },
-    "require": {}
+    "require": {
+        "php": ">8.4"
+    }
 }
