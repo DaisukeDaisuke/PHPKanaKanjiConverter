@@ -13,12 +13,6 @@ final class KanaKanjiConverter
 	private string $dictFile;
 	private string $connectionFile;
 
-	private bool $connectionLoaded = false;
-	private int $connectionSize = 0;
-	private array $connectionCostMap = [];
-
-	private array $fileCache = [];
-
 	public function __construct(string $dictPath)
 	{
 		if (is_file($dictPath)) {
@@ -376,77 +370,29 @@ final class KanaKanjiConverter
 		];
 	}
 
+// 追加するプロパティ
+	private ?ConnectionBinary $connectionBinary = null;
+
+// getConnectionBinary() を追加
+	private function getConnectionBinary(): ConnectionBinary
+	{
+		if ($this->connectionBinary === null) {
+			$this->connectionBinary = new ConnectionBinary(dirname($this->dictFile));
+		}
+		return $this->connectionBinary;
+	}
+
+// loadConnectionCosts() を丸ごと置き換え
 	private function loadConnectionCosts(array $lattice): void
 	{
-		// 必要ならファイルをキャッシュから読み込む
-		if (!isset($this->fileCache[$this->connectionFile])) {
-			if (!is_file($this->connectionFile)) {
-				return;
-			}
-			$this->fileCache[$this->connectionFile] = file($this->connectionFile, FILE_IGNORE_NEW_LINES);
-		}
+		// ConnectionBinary の初回アクセス時に自動ロードされるため何もしない
+		$this->getConnectionBinary();
+	}
 
-		$lines = $this->fileCache[$this->connectionFile];
-		if (!isset($lines[0])) {
-			return;
-		}
-
-		$rawSize = trim($lines[0]);
-		$rawSize = ltrim($rawSize, "\xEF\xBB\xBF");
-		$size = (int)$rawSize;
-		if ($size <= 0) {
-			return;
-		}
-		$lineCount = count($lines) - 1;
-		$matrixSize = $this->resolveConnectionSize($size, $lineCount);
-		var_dump($matrixSize);
-		if ($matrixSize <= 0) {
-			return;
-		}
-
-		// 既に size がセットされていなければ設定。異なる size の場合は既存マップをクリアして再構築。
-		if ($this->connectionSize <= 0) {
-			$this->connectionSize = $matrixSize;
-		} elseif ($this->connectionSize !== $matrixSize) {
-			$this->connectionCostMap = [];
-			$this->connectionSize = $matrixSize;
-		}
-
-		// ラティスに必要な接続インデックス（キー配列）を取得
-		$indices = $this->collectConnectionIndices($lattice, $this->connectionSize);
-		if (count($indices) === 0) {
-			$this->connectionLoaded = true;
-			return;
-		}
-
-		// 読み込み済みかどうかを確認し、未読み込みのインデックスだけを集める
-		$missing = [];
-		foreach (array_keys($indices) as $idx) {
-			if (!isset($this->connectionCostMap[$idx])) {
-				$missing[$idx] = true;
-			}
-		}
-
-		// すべて既に揃っていれば何もしない（フラグは true に）
-		if (empty($missing)) {
-			$this->connectionLoaded = true;
-			return;
-		}
-
-		// ファイルの 2 行目以降が接続コストの一次元配列（インデックス 0 に対応）なので、
-		// ファイルを走査して missing に含まれる行だけ読み込む
-
-		foreach ($missing as $idx => $_) {
-			$lineNumber = $idx + 1; // 1行目はサイズなので +1
-
-			if (isset($lines[$lineNumber])) {
-				$this->connectionCostMap[$idx] = (int)trim($lines[$lineNumber]);
-			} else {
-				throw new \RuntimeException("connection file is broken");
-			}
-		}
-
-		$this->connectionLoaded = true;
+// getConnectionCost() を置き換え
+	private function getConnectionCost(int $rightId, int $leftId): int
+	{
+		return $this->getConnectionBinary()->getCost($rightId, $leftId);
 	}
 
 	private function resolveConnectionSize(int $reportedSize, int $lineCount): int
@@ -512,15 +458,5 @@ final class KanaKanjiConverter
 		}
 
 		return $indices;
-	}
-
-	private function getConnectionCost(int $rightId, int $leftId): int
-	{
-		if ($this->connectionSize <= 0) {
-			return 0;
-		}
-
-		$index = $rightId * $this->connectionSize + $leftId;
-		return $this->connectionCostMap[$index] ?? 0;
 	}
 }

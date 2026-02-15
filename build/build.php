@@ -95,3 +95,89 @@ function buildDictionaryIndex(string $baseDir): void
 
 $baseDir = realpath(__DIR__."/../src/dictionary_oss");
 buildDictionaryIndex(rtrim($baseDir, DIRECTORY_SEPARATOR));
+
+
+// build_dictionary_index.php の末尾に追記
+
+function buildConnectionBinary(string $baseDir): void
+{
+	$srcFile = $baseDir . DIRECTORY_SEPARATOR . 'connection_single_column.txt';
+	$binFile = $baseDir . DIRECTORY_SEPARATOR . 'connection.bin';
+
+	if (!is_file($srcFile)) {
+		echo "connection_single_column.txt が見つかりません\n";
+		return;
+	}
+
+	echo "Reading connection file...\n";
+
+	$fh = fopen($srcFile, 'rb');
+	if ($fh === false) {
+		throw new RuntimeException("Cannot open: $srcFile");
+	}
+
+	// 1行目：サイズ
+	$firstLine = trim((string)fgets($fh));
+	$firstLine = ltrim($firstLine, "\xEF\xBB\xBF"); // BOM除去
+	$reportedSize = (int)$firstLine;
+
+	// resolveConnectionSize 相当：実際の行数から正確なサイズを決定
+	// 先にファイルサイズから行数を推定するより、全部読んで数える
+	$costs = [];
+	while (($line = fgets($fh)) !== false) {
+		$costs[] = (int)trim($line);
+	}
+	fclose($fh);
+
+	$lineCount = count($costs);
+	echo "Line count: {$lineCount}\n";
+
+	// resolveConnectionSize と同じロジック
+	$size = $reportedSize;
+	if ($lineCount === $size * $size) {
+		// そのまま
+	} elseif ($lineCount === ($size + 1) * ($size + 1)) {
+		$size = $size + 1;
+	} else {
+		$root = (int)floor(sqrt((float)$lineCount));
+		if ($root > 0 && $root * $root === $lineCount) {
+			$size = $root;
+		}
+	}
+
+	echo "Matrix size: {$size}×{$size}\n";
+
+	// バイナリ書き出し
+	// ヘッダ: size(4byte) + reserved(4byte) = 8byte
+	// データ: int16 × size × size
+	$out = fopen($binFile, 'wb');
+	if ($out === false) {
+		throw new RuntimeException("Cannot write: $binFile");
+	}
+
+	fwrite($out, pack('VV', $size, 0)); // ヘッダ8byte
+
+	// int16 は -32768〜32767 なので pack('v') では符号なしになる
+	// 接続コストは負値もありうるので符号付きで扱う
+	// → pack('s*') で一括書き出しが最速だがメモリを食うので分割
+	$chunkSize = 10000;
+	$total = count($costs);
+	for ($i = 0; $i < $total; $i += $chunkSize) {
+		$chunk = array_slice($costs, $i, $chunkSize);
+		// 's' = signed short (machine byte order) → ポータビリティのため 'v' + 符号変換
+		$bin = '';
+		foreach ($chunk as $v) {
+			// 負値を uint16 に変換して pack
+			$bin .= pack('v', $v & 0xFFFF);
+		}
+		fwrite($out, $bin);
+	}
+	fclose($out);
+
+	$binSize = round(filesize($binFile) / 1024 / 1024, 2);
+	echo "Done! connection.bin = {$binSize}MB  (size={$size})\n";
+}
+
+$baseDir = rtrim($baseDir, DIRECTORY_SEPARATOR);
+buildDictionaryIndex($baseDir);
+buildConnectionBinary($baseDir);

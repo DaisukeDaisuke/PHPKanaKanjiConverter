@@ -9,6 +9,7 @@
         }
     },
     "require": {
-        "php": ">8.4"
+        "php": ">8.4",
+        "pocketmine/binaryutils": "^0.2.7"
     }
 }

@@ -3,26 +3,28 @@
 declare(strict_types=1);
 
 namespace kanakanjiconverter;
-// BinaryDictionaryIndex.php
 
+use pocketmine\utils\BinaryStream;
+
+// BinaryDictionaryIndex.php
 /**
  * 固定長バイナリインデックスを使った辞書検索
- * PHPメモリに配列を持たず fseek+fread のみで動作
+ * ファイルハンドルの代わりに BinaryStream でメモリ上バッファを管理
  */
 class BinaryDictionaryIndex
 {
-	private const HEADER_SIZE  = 12;
-	private const RECORD_SIZE  = 13;  // V(4)+v(2)+C(1)+V(4)+v(2)
+	private const HEADER_SIZE = 12;
+	private const RECORD_SIZE = 13;
 
 	private string $baseDir;
 	private int    $recordCount = 0;
 
-	/** @var resource */
-	private $idxFh;
-	/** @var resource */
-	private $strFh;
-	/** @var array<int, resource> file_id => fh */
-	private array $dictFh = [];
+	// fopen/fseek/fread の代わりに BinaryStream を使用
+	private BinaryStream $idxStream;
+	private BinaryStream $strStream;
+
+	/** @var array<int, BinaryStream> file_id => stream */
+	private array $dictStreams = [];
 
 	public function __construct(string $baseDir)
 	{
@@ -36,63 +38,51 @@ class BinaryDictionaryIndex
 		$strFile = $this->baseDir . DIRECTORY_SEPARATOR . 'dictionary.str';
 
 		if (!is_file($idxFile) || !is_file($strFile)) {
-			throw new RuntimeException(
+			throw new \RuntimeException(
 				"インデックスが見つかりません。build_dictionary_index.php を実行してください。\n" .
 				"  php build_dictionary_index.php {$this->baseDir}"
 			);
 		}
 
-		$this->idxFh = fopen($idxFile, 'rb');
-		$this->strFh = fopen($strFile, 'rb');
+		// file_get_contents で一括読み込み → BinaryStream でラップ
+		$this->idxStream = new BinaryStream((string)file_get_contents($idxFile));
+		$this->strStream = new BinaryStream((string)file_get_contents($strFile));
 
-		if ($this->idxFh === false || $this->strFh === false) {
-			throw new RuntimeException("インデックスファイルを開けません");
-		}
+		// ヘッダ読み込み（先頭4バイトがレコード数）
+		$this->idxStream->setOffset(0);
+		$this->recordCount = $this->idxStream->getLInt();
+		// reserved 8バイトはスキップ（ヘッダ計12バイト）
 
-		// ヘッダ読み込み
-		$header = fread($this->idxFh, self::HEADER_SIZE);
-		$unpacked = unpack('Vcount', $header);
-		$this->recordCount = $unpacked['count'];
-
-		// 辞書ファイルハンドルを開いておく
+		// 辞書ファイルも同様に一括読み込み
 		for ($i = 0; $i <= 9; $i++) {
 			$fname = $this->baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
 			if (is_file($fname)) {
-				$fh = fopen($fname, 'rb');
-				if ($fh !== false) {
-					$this->dictFh[$i] = $fh;
-				}
+				$this->dictStreams[$i] = new BinaryStream((string)file_get_contents($fname));
 			}
 		}
 	}
 
 	/**
 	 * hiragana中に含まれるreadingを全検索
-	 * @return array<string, array[]>  [reading => [entry, ...]]
+	 * @return array<string, array[]>
 	 */
 	public function search(string $hiragana): array
 	{
-		$result = [];
-
-		// バイナリサーチ可能な最短prefix候補を収集
-		// 全レコードをなめず「hiraganaの先頭文字」でバイナリサーチで絞る
-		$chars   = mb_str_split($hiragana, 1, 'UTF-8');
+		$result  = [];
 		$checked = [];
+		$mbCharsAll = mb_str_split($hiragana, 1, 'UTF-8');
+		$totalChars = count($mbCharsAll);
 
-		foreach ($chars as $startPos => $char) {
-			// hiraganaのこの位置から始まる部分文字列を順に試す
+		for ($startPos = 0; $startPos < $totalChars; $startPos++) {
 			$partial = '';
-			$mbChars = mb_str_split(mb_substr($hiragana, $startPos), 1, 'UTF-8');
-
-			foreach ($mbChars as $c) {
-				$partial .= $c;
+			for ($endPos = $startPos; $endPos < $totalChars; $endPos++) {
+				$partial .= $mbCharsAll[$endPos];
 
 				if (isset($checked[$partial])) {
 					continue;
 				}
 				$checked[$partial] = true;
 
-				// バイナリサーチでpartialと一致するreadingを探す
 				$entries = $this->findByReading($partial);
 				if ($entries !== null) {
 					$result[$partial] = $entries;
@@ -105,7 +95,6 @@ class BinaryDictionaryIndex
 
 	/**
 	 * バイナリサーチで reading に完全一致するエントリを全取得
-	 * @return array[]|null  見つからなければ null
 	 */
 	private function findByReading(string $reading): ?array
 	{
@@ -113,7 +102,6 @@ class BinaryDictionaryIndex
 		$hi    = $this->recordCount - 1;
 		$first = -1;
 
-		// 左端バイナリサーチ
 		while ($lo <= $hi) {
 			$mid = ($lo + $hi) >> 1;
 			$cmp = strcmp($this->readReading($mid), $reading);
@@ -131,7 +119,6 @@ class BinaryDictionaryIndex
 			return null;
 		}
 
-		// 同一readingを右方向に収集
 		$entries = [];
 		for ($i = $first; $i < $this->recordCount; $i++) {
 			if ($this->readReading($i) !== $reading) {
@@ -146,39 +133,52 @@ class BinaryDictionaryIndex
 		return $entries ?: null;
 	}
 
-	/** インデックスのi番目レコードからreading文字列を読む */
+	/**
+	 * インデックスのi番目レコードからreading文字列を読む
+	 * BinaryStream のオフセットを直接操作
+	 */
 	private function readReading(int $i): string
 	{
 		$pos = self::HEADER_SIZE + $i * self::RECORD_SIZE;
-		fseek($this->idxFh, $pos);
-		$rec = fread($this->idxFh, self::RECORD_SIZE);
+		$this->idxStream->setOffset($pos);
 
-		$u = unpack('Vstr_offset/vstr_len', $rec);
-		fseek($this->strFh, $u['str_offset']);
-		return fread($this->strFh, $u['str_len']);
+		$strOffset = $this->idxStream->getLInt();   // 4byte
+		$strLen    = $this->idxStream->getLShort();  // 2byte
+
+		$this->strStream->setOffset($strOffset);
+		return $this->strStream->get($strLen);
 	}
 
-	/** インデックスのi番目レコードからエントリ本体を取得 */
+	/**
+	 * インデックスのi番目レコードからエントリ本体を取得
+	 */
 	private function fetchEntry(int $i, string $reading): ?array
 	{
 		$pos = self::HEADER_SIZE + $i * self::RECORD_SIZE;
-		fseek($this->idxFh, $pos);
-		$rec = fread($this->idxFh, self::RECORD_SIZE);
+		$this->idxStream->setOffset($pos);
 
-		$u = unpack('Vstr_offset/vstr_len/Cfile_id/Vline_offset', $rec);
+		$this->idxStream->getLInt();    // str_offset（読み飛ばし）
+		$this->idxStream->getLShort();  // str_len（読み飛ばし）
+		$fileId     = $this->idxStream->getByte();   // 1byte
+		$lineOffset = $this->idxStream->getLInt();   // 4byte
 
-		$fh = $this->dictFh[$u['file_id']] ?? null;
-		if ($fh === null) {
+		$stream = $this->dictStreams[$fileId] ?? null;
+		if ($stream === null) {
 			return null;
 		}
 
-		fseek($fh, $u['line_offset']);
-		$line = fgets($fh);
-		if ($line === false) {
-			return null;
+		// 指定オフセットから1行読む
+		$stream->setOffset($lineOffset);
+		$line = '';
+		while (!$stream->feof()) {
+			$c = $stream->get(1);
+			if ($c === "\n") {
+				break;
+			}
+			$line .= $c;
 		}
 
-		return $this->parseLine(rtrim($line, "\r\n"), $reading);
+		return $this->parseLine(rtrim($line, "\r"), $reading);
 	}
 
 	private function parseLine(string $line, string $reading): ?array
@@ -196,10 +196,5 @@ class BinaryDictionaryIndex
 		];
 	}
 
-	public function __destruct()
-	{
-		if (isset($this->idxFh)) fclose($this->idxFh);
-		if (isset($this->strFh)) fclose($this->strFh);
-		foreach ($this->dictFh as $fh) fclose($fh);
-	}
+	// __destruct 不要（ファイルハンドルなし）
 }
