@@ -17,12 +17,16 @@ final class PHPKanaKanjiConverter{
 	 * @param bool $warmUP Determines whether to execute a warm-up operation during initialization.
 	 * @return void
 	 */
-	public function __construct(){
+	public function __construct(bool $warmUP = true){
 		$this->romaji = new ConvertibleRomaji();
 		//$hiragana = $romaji->toHiragana(true);
 
 		$dictDir = realpath(__DIR__ . '/dictionary_oss') ?: (__DIR__ . '/dictionary_oss');
 		$this->kannziconverter = new KanaKanjiConverter($dictDir);
+
+		if($warmUP){
+			$this->kannziconverter->convert("aisu");
+		}
 	}
 
 	/**
