@@ -65,41 +65,19 @@ final class KanaKanjiConverter
 			'candidates' => $candidates,
 		];
 	}
+	private ?BinaryDictionaryIndex $binaryIndex = null;
+
+	private function getBinaryIndex(): BinaryDictionaryIndex
+	{
+		if ($this->binaryIndex === null) {
+			$this->binaryIndex = new BinaryDictionaryIndex(dirname($this->dictFile));
+		}
+		return $this->binaryIndex;
+	}
 
 	private function collectEntriesFromDictionaries(string $hiragana): array
 	{
-		$result = [];
-		$baseDir = dirname($this->dictFile);
-
-		for ($i = 0; $i <= 9; $i++) {
-			$fname = $baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
-
-			if (!is_file($fname)) {
-				continue;
-			}
-
-			if (!isset($this->fileCache[$fname])) {
-				$lines = file($fname, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-				$parsed = [];
-				foreach ($lines as $line) {
-					$entry = $this->parseDictionaryLine($line);
-					if ($entry !== null) {
-						$parsed[] = $entry;
-					}
-				}
-
-				$this->fileCache[$fname] = $parsed;
-			}
-
-			foreach ($this->fileCache[$fname] as $entry) {
-				if (strpos($hiragana, $entry['reading']) !== false) {
-					$result[$entry['reading']][] = $entry;
-				}
-			}
-		}
-
-		return $result;
+		return $this->getBinaryIndex()->search($hiragana);
 	}
 
 

@@ -33,7 +33,7 @@ $testWords = [
  * 1. プリロード時間測定
  * ========================= */
 $startPreload = microtime(true);
-$converter = new PHPKanaKanjiConverter(true);
+$converter = new PHPKanaKanjiConverter();
 $endPreload = microtime(true);
 
 $preloadTime = $endPreload - $startPreload;
