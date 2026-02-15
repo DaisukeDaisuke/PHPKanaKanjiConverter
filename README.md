@@ -31,16 +31,6 @@ echo $a["best"]["text"], "\n";
 今日の天気は晴れで，今日の昼食はアイスです！
 ```
 
-
-### result
-
-```php
-機能はすき焼きを食べました
-機能はすき焼きを食べました
-昨日はすき焼きを食べました
-機能はスキヤキを食べました
-```
-
 ## Input other than Roman letters is not possible
 
 ```php
