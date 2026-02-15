@@ -32,7 +32,7 @@ final class PHPKanaKanjiConverter{
 	 * @param bool $removeIllegalFlag Optional flag to remove illegal characters during conversion. Default is false.
 	 * @param int $numofbest The number of best conversion results to return. Default is 3.
 	 *
-	 * @return array An array of conversion results after performing Kana-Kanji conversion.
+	 * @return array{best: array{text: string, tokens: array<int, array{surface: string, reading: string, word_cost: string, penalty: string}>}, cost: int, candidates: list<array{surface: string, reading: string, word_cost: string, penalty: string}>} An array of conversion results after performing Kana-Kanji conversion.
 	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3) : array{
 		$input = $this->romaji->toHiragana($input, $removeIllegalFlag);
