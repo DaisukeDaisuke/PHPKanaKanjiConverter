@@ -7,6 +7,10 @@ Vibe coded romaji to hiragana to kanji conversion
 # usage
 
 ```php
+composer require daisukedaisuke/kanakanjiconverter
+```
+
+```php
 <?php
 
 declare(strict_types=1);
