@@ -14,7 +14,10 @@ namespace kanakanjiconverter;
 class ConvertibleRomaji{
 
 	// 変換辞書（長い候補を優先して扱うことを前提）
-	private static $map = [
+	/**
+	 * @var array<string, string>
+	 */
+	private static array $map = [
 		// 2文字（子音+母音等）
 		'ka' => 'か', 'ki' => 'き', 'ku' => 'く', 'ke' => 'け', 'ko' => 'こ',
 		'sa' => 'さ', 'shi' => 'し', 'si' => 'し', 'su' => 'す', 'se' => 'せ', 'so' => 'そ',
@@ -198,9 +201,7 @@ class ConvertibleRomaji{
 		}
 
 		// 連続する「んん」を単一に正規化
-		$out = str_replace("んん", "ん", $out);
-
-		return $out;
+		return str_replace("んん", "ん", $out);
 	}
 
 	private function convertTokenToHiragana($text, $removeIllegalFlag){

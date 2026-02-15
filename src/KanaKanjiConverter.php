@@ -36,7 +36,7 @@ final class KanaKanjiConverter
 		$entriesByReading = $this->collectEntriesFromDictionaries($hiragana);
 
 		$lattice = $this->buildLattice($hiragana, $entriesByReading);
-		$this->loadConnectionCosts($lattice);
+		$this->loadConnectionCosts();
 
 		$forward = $this->forwardDp($lattice);
 		$candidates = $this->backwardAStar($lattice, $forward['costs'], $nbest);
@@ -72,42 +72,6 @@ final class KanaKanjiConverter
 	private function collectEntriesFromDictionaries(string $hiragana): array
 	{
 		return $this->getBinaryIndex()->search($hiragana);
-	}
-
-
-
-	private function parseDictionaryLine(string $line): ?array
-	{
-		$pos1 = strpos($line, "\t");
-		if ($pos1 === false) {
-			return null;
-		}
-		$pos2 = strpos($line, "\t", $pos1 + 1);
-		if ($pos2 === false) {
-			return null;
-		}
-		$pos3 = strpos($line, "\t", $pos2 + 1);
-		if ($pos3 === false) {
-			return null;
-		}
-		$pos4 = strpos($line, "\t", $pos3 + 1);
-		if ($pos4 === false) {
-			return null;
-		}
-
-		$reading = substr($line, 0, $pos1);
-		$leftId = (int)substr($line, $pos1 + 1, $pos2 - $pos1 - 1);
-		$rightId = (int)substr($line, $pos2 + 1, $pos3 - $pos2 - 1);
-		$wordCost = (int)substr($line, $pos3 + 1, $pos4 - $pos3 - 1);
-		$surface = substr($line, $pos4 + 1);
-
-		return [
-			'reading' => $reading,
-			'left_id' => $leftId,
-			'right_id' => $rightId,
-			'word_cost' => $wordCost,
-			'surface' => $surface,
-		];
 	}
 
 	private function buildLattice(string $hiragana, array $entriesByReading): array
@@ -411,74 +375,9 @@ final class KanaKanjiConverter
 	}
 
 // loadConnectionCosts() を丸ごと置き換え
-	private function loadConnectionCosts(array $lattice): void
+	private function loadConnectionCosts(): void
 	{
 		// ConnectionBinary の初回アクセス時に自動ロードされるため何もしない
 		$this->getConnectionBinary();
-	}
-
-	private function resolveConnectionSize(int $reportedSize, int $lineCount): int
-	{
-		if ($reportedSize <= 0) {
-			return 0;
-		}
-
-		$expected = $reportedSize * $reportedSize;
-		if ($lineCount === $expected) {
-			return $reportedSize;
-		}
-
-		$plusOne = ($reportedSize + 1) * ($reportedSize + 1);
-		if ($lineCount === $plusOne) {
-			return $reportedSize + 1;
-		}
-
-		$root = (int)floor(sqrt((float)$lineCount));
-		if ($root > 0 && $root * $root === $lineCount) {
-			return $root;
-		}
-
-		return $reportedSize;
-	}
-
-	private function collectConnectionIndices(array $lattice, int $size): array
-	{
-		$nodes = $lattice['nodes'];
-		$nodesByStart = $lattice['nodesByStart'];
-		$nodesByEnd = $lattice['nodesByEnd'];
-		$len = $lattice['len'];
-		$bos = $lattice['bos'];
-		$eos = $lattice['eos'];
-
-		$indices = [];
-
-		for ($pos = 0; $pos <= $len; $pos++) {
-			$prevNodes = $nodesByEnd[$pos];
-			$nextNodes = $nodesByStart[$pos];
-
-			foreach ($prevNodes as $prevId) {
-				if ($prevId === $eos) {
-					continue;
-				}
-				foreach ($nextNodes as $nextId) {
-					if ($nextId === $bos) {
-						continue;
-					}
-					if ($nextId === $eos && $pos !== $len) {
-						continue;
-					}
-					if ($prevId === $bos && $nextId === $eos && $len > 0) {
-						continue;
-					}
-
-					$rightId = $nodes[$prevId]['right_id'];
-					$leftId = $nodes[$nextId]['left_id'];
-					$index = $rightId * $size + $leftId;
-					$indices[$index] = true;
-				}
-			}
-		}
-
-		return $indices;
 	}
 }

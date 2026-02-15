@@ -14,7 +14,6 @@ final class PHPKanaKanjiConverter{
 	/**
 	 * Constructor for initializing the ConvertibleRomaji instance and the KanaKanjiConverter with a dictionary path.
 	 *
-	 * @param bool $warmUP Determines whether to execute a warm-up operation during initialization.
 	 * @return void
 	 */
 	public function __construct(){
