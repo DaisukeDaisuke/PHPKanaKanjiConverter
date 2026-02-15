@@ -90,62 +90,62 @@ echo $a["best"]["text"], "\n";
 
 # benchmark
 
-```php
+```
 string(57) "きょうのてんきははれですごしやすいです"
 今日の天気は晴れで過ごしやすいです
 Input: kilyounotennkihaharedesugoshiyasuidesu
-Convert time: 42.052030563354 ms
+Convert time: 51.547050476074 ms
 
 string(60) "わたしはにほんごのべんきょうをしています"
 私は日本語の勉強をしています
 Input: watashihanihongonobenkyouwoshiteimasu
-Convert time: 11.886119842529 ms
+Convert time: 16.898155212402 ms
 
 string(57) "あしたはともだちととうきょうにいきます"
 明日は友達と東京に行きます
 Input: ashitahatomodachitotoukyouniikimasu
-Convert time: 19.515991210938 ms
+Convert time: 29.9232006073 ms
 
 string(63) "これはかなをかんじにへんかんするてすとです"
 これはカナを感じに変換するテストです
 Input: korehakanawokanjinihenkansurutesutodesu
-Convert time: 16.051054000854 ms
+Convert time: 23.651123046875 ms
 
 string(48) "このすくりぷとはべんちまーくです"
 このスクリプトはベンチマークです
 Input: konosukuriputohabenchima-kudesu
-Convert time: 5.5899620056152 ms
+Convert time: 7.4038505554199 ms
 
 string(66) "にほんのじゅうようなぶんかをおおくまなびます"
 日本の重要な文化を多く学びます
 Input: nihonnojuuyounabunkawoookumanabimasu
-Convert time: 14.232158660889 ms
+Convert time: 21.245956420898 ms
 
 string(63) "あたらしいぷろじぇくとをかいはつちゅうです"
 新しいプロジェクトを開発中です
 Input: atarasiipurojekutowokaihatsuchuudesu
-Convert time: 12.650012969971 ms
+Convert time: 17.961978912354 ms
 
 string(57) "さいきんのぱそこんはせいのうがいいです"
 最近のパソコンは性能が良いです
 Input: saikinnopasokonhaseinougaiidesu
-Convert time: 20.437955856323 ms
+Convert time: 30.332088470459 ms
 
 string(63) "かなかんじこんばーたーのてすとをしています"
 かな漢字コンバーターのテストをしています
 Input: kanakanjikonnba-ta-notesutowoshiteimasu
-Convert time: 23.836851119995 ms
+Convert time: 35.962104797363 ms
 
 string(69) "ながいろーまじぶんをこうそくでけんしょうします"
 長いローマ字分を高速で検証します
 Input: nagairo-majibunnwokousokudekenshoushimasu
-Convert time: 28.27000617981 ms
+Convert time: 43.026924133301 ms
 
 =========================
-Preload time: 1.6109943389893 ms
-Average convert time (10 AI words): 19.452214241028 ms
-112.34191894531 MB
-110.35761260986 MB
+Preload time: 2.0620822906494 ms
+Average convert time (10 AI words): 27.795243263245 ms
+113.64364624023 MB
+111.65933990479 MB
 ```
 
 

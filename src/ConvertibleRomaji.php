@@ -81,7 +81,7 @@ class ConvertibleRomaji{
 		'|' => '｜',
 		'}' => '｝',
 		'~' => '～',
-// --- ぢ / づ ---
+		// --- ぢ / づ ---
 		'di' => 'ぢ',
 		'du' => 'づ',
 
@@ -119,6 +119,9 @@ class ConvertibleRomaji{
 		// J / Z 系
 		'ja'  => 'じゃ', 'jyi' => 'じぃ', 'ju'  => 'じゅ', 'je'  => 'じぇ', 'jo'  => 'じょ',
 		'zya' => 'じゃ', 'zyi' => 'じぃ', 'zyu' => 'じゅ', 'zye' => 'じぇ', 'zyo' => 'じょ',
+
+		// 互換入力用（よくある別表記）
+		'zi' => 'じ',
 
 		// T / CH 系
 		'tya' => 'ちゃ', 'tyi' => 'ちぃ', 'tyu' => 'ちゅ', 'tye' => 'ちぇ', 'tyo' => 'ちょ',
@@ -194,6 +197,7 @@ class ConvertibleRomaji{
 			$out .= $this->convertTokenToHiragana($token, $removeIllegalFlag);
 		}
 
+		// 連続する「んん」を単一に正規化
 		$out = str_replace("んん", "ん", $out);
 
 		return $out;
@@ -226,6 +230,29 @@ class ConvertibleRomaji{
 					$pos += 1; // 同一子音を一文字分スキップ
 					continue;
 				}
+			}
+
+			// --- 重要: 撥音 n の補正処理 ---
+			// n の後が n の場合は「ん」として1文字消費する（nn -> ん + n の扱い）
+			// n の後が母音 (a,i,u,e,o) または y の場合は合字の可能性があるためここで確定しない
+			// それ以外（空白/末尾/子音）の場合は「ん」として処理する
+			if($cur === 'n'){
+				$nextChar = ($pos + 1 < $len) ? mb_substr($textLower, $pos + 1, 1, 'UTF-8') : '';
+				if($nextChar === 'n'){
+					// nn -> ん（2文字分消費して次のnをループに戻さない）
+					// pos+=1 だと残ったnがni等にマッチするバグがあったため pos+=2 に修正
+					$res .= 'ん';
+					$pos += 2;
+					continue;
+				}
+				// 次が母音または y の場合は 'na' や 'nya' 等を期待してマッチ試行に任せる
+				if($nextChar === '' || !preg_match('/[aiueoy]/i', $nextChar)){
+					// 次が母音/y ではない（子音か末尾） -> ここで ん として確定
+					$res .= 'ん';
+					$pos += 1;
+					continue;
+				}
+				// それ以外は通常のマッチ処理に任せる（例: "na", "nya" 等）
 			}
 
 			// 長いものから順に照合（最長 $maxKeyLen 文字）
@@ -269,11 +296,10 @@ class ConvertibleRomaji{
 	}
 
 
-	public function toKatakana($removeIllegalFlag = true){
-		$hiragana = $this->toHiragana($removeIllegalFlag);
+	// toKatakana は原文テキストを受け取り toHiragana を通して変換するよう修正
+	public function toKatakana(string $originText, $removeIllegalFlag = true){
+		$hiragana = $this->toHiragana($originText, $removeIllegalFlag);
 		// ひらがなをカタカナに（全角のひらがな範囲→カタカナ範囲へ）
-		// mb_convert_kana の 'C' は半角カナ→全角カナなどの変換用なので使わない
-		// ここでは Unicode の変換（ひらがな→カタカナ）を文字ごとに行う
 		$out = '';
 		$len = mb_strlen($hiragana, 'UTF-8');
 		for($i = 0; $i < $len; $i++){
@@ -289,4 +315,3 @@ class ConvertibleRomaji{
 		return $out;
 	}
 }
-

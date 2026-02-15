@@ -3,14 +3,22 @@
 declare(strict_types=1);
 
 use kanakanjiconverter\PHPKanaKanjiConverter;
-use kanakanjiconverter\ConnectionBinary;
 
 include __DIR__ . '/vendor/autoload.php';
 
-$cb = new ConnectionBinary("src/dictionary_oss");
+$basemem = memory_get_usage();
+$basemem1 = memory_get_peak_usage();
 
-// BOS(right=0) → 昨日(left=1910) の接続コスト
-var_dump($cb->getCost(0, 1910));
+$input = "kilyouhayoitennkidesu";
+$converter = new PHPKanaKanjiConverter();
+$a = $converter->convert($input);
+echo $a["best"]["text"], "\n";
 
-// BOS(right=0) → 機能(left=1842) の接続コスト
-var_dump($cb->getCost(0, 1842));
+//var_dump($a);
+
+foreach ($a["candidates"] as $candidate) {
+	echo $candidate["text"], "\n";
+}
+
+echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
+echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";

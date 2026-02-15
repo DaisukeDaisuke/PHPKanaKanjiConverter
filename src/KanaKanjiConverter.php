@@ -342,11 +342,34 @@ final class KanaKanjiConverter
 		return $results;
 	}
 
+// プロパティ追加
+	private ?PosIndex $posIndex = null;
+
+	private function getPosIndex(): PosIndex
+	{
+		if ($this->posIndex === null) {
+			$idDefPath = dirname($this->dictFile) . DIRECTORY_SEPARATOR . 'id.def';
+			$this->posIndex = new PosIndex($idDefPath);
+		}
+		return $this->posIndex;
+	}
+
+// getConnectionCost() を差し替え
+// 接続コスト＋品詞連鎖補正を合算
+	private function getConnectionCost(int $rightId, int $leftId): int
+	{
+		$base       = $this->getConnectionBinary()->getCost($rightId, $leftId);
+		$adjustment = $this->getPosIndex()->getChainAdjustment($rightId, $leftId);
+		return $base + $adjustment;
+	}
+
+// buildCandidate() の tokens に品詞情報を追加
 	private function buildCandidate(array $path, array $nodes, int $totalCost): array
 	{
-		$ids = array_reverse($path);
-		$text = '';
+		$ids    = array_reverse($path);
+		$text   = '';
 		$tokens = [];
+		$posIndex = $this->getPosIndex();
 
 		foreach ($ids as $id) {
 			$node = $nodes[$id];
@@ -354,19 +377,24 @@ final class KanaKanjiConverter
 				continue;
 			}
 
+			$posInfo = $posIndex->getPos($node['left_id']);
+
 			$tokens[] = [
-				'surface' => $node['surface'],
-				'reading' => $node['reading'],
+				'surface'   => $node['surface'],
+				'reading'   => $node['reading'],
 				'word_cost' => $node['word_cost'],
-				'penalty' => $node['penalty'],
+				'penalty'   => $node['penalty'],
+				'pos'       => $posInfo['pos'],       // 品詞（名詞・動詞等）
+				'subpos'    => $posInfo['subpos'],     // 品詞細分類
+				'pos_label' => $posInfo['label'],      // "名詞-副詞的" 等
 			];
 			$text .= $node['surface'];
 		}
 
 		return [
-			'text' => $text,
+			'text'   => $text,
 			'tokens' => $tokens,
-			'cost' => $totalCost,
+			'cost'   => $totalCost,
 		];
 	}
 
@@ -387,12 +415,6 @@ final class KanaKanjiConverter
 	{
 		// ConnectionBinary の初回アクセス時に自動ロードされるため何もしない
 		$this->getConnectionBinary();
-	}
-
-// getConnectionCost() を置き換え
-	private function getConnectionCost(int $rightId, int $leftId): int
-	{
-		return $this->getConnectionBinary()->getCost($rightId, $leftId);
 	}
 
 	private function resolveConnectionSize(int $reportedSize, int $lineCount): int
