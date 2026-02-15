@@ -7,7 +7,7 @@ namespace app;
 include __DIR__ . '/vendor/autoload.php';
 
 
-$romaji = new ConvertibleRomaji('kilyouhanitiyoubi');
+$romaji = new ConvertibleRomaji('anime');
 $hiragana = $romaji->toHiragana(true);
 var_dump($hiragana);
 

@@ -201,6 +201,8 @@ class ConvertibleRomaji{
 			$out .= $this->convertTokenToHiragana($token, $removeIllegalFlag);
 		}
 
+		$out = str_replace("んん", "ん", $out);
+
 		return $out;
 	}
 
