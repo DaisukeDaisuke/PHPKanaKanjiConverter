@@ -8,9 +8,9 @@ include __DIR__ . '/vendor/autoload.php';
 
 $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
+$converter = new PHPKanaKanjiConverter();
 
-foreach(["server", "konn", "sinnkannsenn", "converterですか"] as $input){
-	$converter = new PHPKanaKanjiConverter();
+foreach(["server", "konn", "sinnkannsenn", "purozilekutowo"] as $input){
 	$result = $converter->convert($input);
 
 	if(preg_match('/[A-Za-z]/u', $result["kana"])){

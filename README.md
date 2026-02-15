@@ -1,5 +1,6 @@
 # PHPKanaKanjiConverter
-Vibe coded romaji to hiragana to kanji conversion
+Vibe coded romaji to hiragana to kanji conversion  
+ローマ字入力を漢字表記にできるPHPライブラリ
 
 > [!CAUTION]
 > Vibe coded!!!!!
@@ -67,9 +68,9 @@ include __DIR__ . '/vendor/autoload.php';
 
 $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
+$converter = new PHPKanaKanjiConverter();
 
 foreach(["server", "konn", "sinnkannsenn", "converterですか"] as $input){
-	$converter = new PHPKanaKanjiConverter();
 	$result = $converter->convert($input);
 
 	if(preg_match('/[A-Za-z]/u', $result["kana"])){
@@ -103,147 +104,153 @@ converterですか
 Input: kilyounotennkihaharedesugoshiyasuidesu
 nihonngo: きょうのてんきははれですごしやすいです
 今日の天気は晴れで過ごしやすいです
-Convert time: 54.537057876587 ms
+Convert time: 47.377109527588 ms
 
 Input: watashihanihongonobenkyouwoshiteimasu
 nihonngo: わたしはにほんごのべんきょうをしています
 私は日本語の勉強をしています
-Convert time: 15.737056732178 ms
+Convert time: 17.940998077393 ms
 
 Input: ashitahatomodachitotoukyouniikimasu
 nihonngo: あしたはともだちととうきょうにいきます
 明日は友達と東京に行きます
-Convert time: 26.669025421143 ms
+Convert time: 30.944108963013 ms
 
 Input: korehakanawokanjinihenkansurutesutodesu
 nihonngo: これはかなをかんじにへんかんするてすとです
 これはカナを感じに変換するテストです
-Convert time: 21.369934082031 ms
+Convert time: 25.392055511475 ms
 
 Input: konosukuriputohabenchima-kudesu
 nihonngo: このすくりぷとはべんちまーくです
 このスクリプトはベンチマークです
-Convert time: 7.1561336517334 ms
+Convert time: 8.4488391876221 ms
 
 Input: nihonnojuuyounabunkawoookumanabimasu
 nihonngo: にほんおじゅうようなぶんかをおおくまなびます
 日本お重要な文化を多く学びます
-Convert time: 19.139051437378 ms
+Convert time: 24.056196212769 ms
 
 Input: atarasiipurojekutowokaihatsuchuudesu
 nihonngo: あたらしいぷろじぇくとをかいはつちゅうです
 新しいプロジェクトを開発中です
-Convert time: 16.45302772522 ms
+Convert time: 23.412227630615 ms
 
 Input: saikinnopasokonhaseinougaiidesu
 nihonngo: さいきんおぱそこんはせいのうがいいです
 最近おパソコンは性能が良いです
-Convert time: 27.8160572052 ms
+Convert time: 32.288074493408 ms
 
 Input: kanakanjikonnba-ta-notesutowoshiteimasu
 nihonngo: かなかんじこんばーたーのてすとをしています
 かな漢字コンバーターのテストをしています
-Convert time: 32.999038696289 ms
+Convert time: 38.14697265625 ms
 
 Input: nagairo-majibunnwokousokudekenshoushimasu
 nihonngo: ながいろーまじぶんをこうそくでけんしょうします
 長いローマ字分を高速で検証します
-Convert time: 40.204048156738 ms
+Convert time: 46.870946884155 ms
 
-Input: kinounopurozilylekutowosuisinnsuru
-nihonngo: きのうのぷろじlyぇくとをすいしんする
-昨日のプロジlyぇクトを推進する
-Convert time: 17.627954483032 ms
+Input: kinounopurozilekutowosuisinnsuru
+nihonngo: きのうのぷろじぇくとをすいしんする
+昨日のプロジェクトを推進する
+Convert time: 20.473003387451 ms
 
 Input: kinounoyorugohannha,sukiyakidesu
 nihonngo: きのうのよるごはんは，すきやきです
 昨日の夜ご飯は，すき焼きです
-Convert time: 14.137983322144 ms
+Convert time: 17.143964767456 ms
 
 Input: asitanoasa
 nihonngo: あしたのあさ
 明日の朝
-Convert time: 3.0620098114014 ms
+Convert time: 3.8127899169922 ms
 
 Input: kinounokaigiwokaisaisita
 nihonngo: きのうのかいぎをかいさいした
 昨日の会議を開催した
-Convert time: 22.455930709839 ms
+Convert time: 29.093980789185 ms
 
 Input: imanozidai
 nihonngo: いまのじだい
 今の時代
-Convert time: 3.3860206604004 ms
+Convert time: 4.241943359375 ms
 
 Input: mainitiwotaisetuni
 nihonngo: まいにちをたいせつに
 毎日を大切に
-Convert time: 6.9539546966553 ms
+Convert time: 9.0830326080322 ms
 
 Input: kikaiha
 nihonngo: きかいは
 機会は
-Convert time: 8.5809230804443 ms
+Convert time: 11.415958404541 ms
 
 Input: taiki
 nihonngo: たいき
 待機
-Convert time: 4.7600269317627 ms
+Convert time: 5.7158470153809 ms
 
 Input: mottokireini
 nihonngo: もっときれいに
 もっとキレイに
-Convert time: 10.912895202637 ms
+Convert time: 12.524127960205 ms
 
 Input: hanasigaaru
 nihonngo: はなしがある
 話がある
-Convert time: 3.8678646087646 ms
+Convert time: 4.3768882751465 ms
 
 Input: sannninndeiku
 nihonngo: さんにんでいく
 3人で行く
-Convert time: 3.9899349212646 ms
+Convert time: 4.5528411865234 ms
 
 Input: toukilyuu
 nihonngo: とうきゅう
 東急
-Convert time: 7.1439743041992 ms
+Convert time: 9.2229843139648 ms
 
 Input: kinougasugureteiru
 nihonngo: きのうがすぐれている
 機能が優れている
-Convert time: 6.483793258667 ms
+Convert time: 7.706880569458 ms
 
 Input: atarasiikikaku
 nihonngo: あたらしいきかく
 新しい企画
-Convert time: 16.777992248535 ms
+Convert time: 19.798040390015 ms
 
 Input: ookinakabu
 nihonngo: おおきなかぶ
 大きな株
-Convert time: 11.013984680176 ms
+Convert time: 13.098955154419 ms
 
 Input: terebiwomiru
 nihonngo: てれびをみる
 テレビを見る
-Convert time: 1.1301040649414 ms
+Convert time: 1.2779235839844 ms
 
 Input: kannsilyasareteiru
 nihonngo: かんしゃされている
 感謝されている
-Convert time: 8.4738731384277 ms
+Convert time: 9.5610618591309 ms
 
 Input: kinoutabeta
 nihonngo: きのうたべた
 昨日食べた
-Convert time: 4.0340423583984 ms
+Convert time: 4.8551559448242 ms
 
 Input: suuzinotesuto1234567890tesuto
 nihonngo: すうじのてすと1234567890てすと
 数字のテスト1234567890テスト
-Convert time: 5.9258937835693 ms
+Convert time: 7.1470737457275 ms
+
+=========================
+Preload time: 0.20289421081543 ms
+Average convert time (10 AI words): 16.895861461245 ms
+113.64087677002 MB
+111.66150665283 MB
 ```
 
 

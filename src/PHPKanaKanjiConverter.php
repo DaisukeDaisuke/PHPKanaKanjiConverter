@@ -10,7 +10,6 @@ final class PHPKanaKanjiConverter{
 	private ConvertibleRomaji $romaji;
 	private KanaKanjiConverter $kannziconverter;
 
-
 	/**
 	 * Constructor for initializing the ConvertibleRomaji instance and the KanaKanjiConverter with a dictionary path.
 	 *
@@ -32,7 +31,7 @@ final class PHPKanaKanjiConverter{
 	 * @param bool $removeIllegalFlag Optional flag to remove illegal characters during conversion. Default is false.
 	 * @param int $numofbest The number of best conversion results to return. Default is 3.
 	 *
-	 * @return array{original: string, kana: string, best: array{text: string, cost: int,tokens: list<array{surface: string, reading: string, word_cost: string, penalty: string, pos: string, subpos: string, pos_label: string}>}, candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: string, penalty: string, pos: string, subpos: string, pos_label: string}>>}} An array of conversion results after performing Kana-Kanji conversion.
+	 * @return array{original: string, kana: string, best: array{text: string, cost: int,tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>}, candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>>}} An array of conversion results after performing Kana-Kanji conversion.
 	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3) : array{
 		$kana = $this->romaji->toHiragana($input, $removeIllegalFlag);
