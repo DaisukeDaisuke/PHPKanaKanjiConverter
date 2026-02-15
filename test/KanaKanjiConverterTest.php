@@ -9,7 +9,10 @@ use kanakanjiconverter\KanaKanjiConverter;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-class KanaKanjiConverterTest extends TestCase{
+/**
+ * @internal
+ */
+final class KanaKanjiConverterTest extends TestCase{
 	private static KanaKanjiConverter $converter;
 
 	public static function setUpBeforeClass() : void{

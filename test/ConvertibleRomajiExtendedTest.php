@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * ConvertibleRomaji 追加テスト
  * 既存 ConvertibleRomajiTest.php と重複しないケースを中心に網羅
+ *
+ * @internal
  */
-class ConvertibleRomajiExtendedTest extends TestCase
+final class ConvertibleRomajiExtendedTest extends TestCase
 {
 	private ConvertibleRomaji $romaji;
 

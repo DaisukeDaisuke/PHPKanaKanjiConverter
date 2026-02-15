@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace kanakanjiconverter;
 
+/**
+ * @internal
+ */
 final class KanaKanjiConverter
 {
 	private const INF = 1000000000;

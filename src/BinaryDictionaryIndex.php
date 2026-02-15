@@ -10,8 +10,10 @@ use pocketmine\utils\BinaryStream;
 /**
  * 固定長バイナリインデックスを使った辞書検索
  * ファイルハンドルの代わりに BinaryStream でメモリ上バッファを管理
+ *
+ * @internal
  */
-class BinaryDictionaryIndex
+final class BinaryDictionaryIndex
 {
 	private const HEADER_SIZE = 12;
 	private const RECORD_SIZE = 13;

@@ -9,7 +9,10 @@ use kanakanjiconverter\ConvertibleRomaji;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-class ConvertibleRomajiTest extends TestCase{
+/**
+ * @internal
+ */
+final class ConvertibleRomajiTest extends TestCase{
 	private ConvertibleRomaji $romaji;
 
 	protected function setUp() : void{

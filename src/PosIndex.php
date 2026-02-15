@@ -7,8 +7,10 @@ namespace kanakanjiconverter;
 /**
  * id.def をロードして left_id/right_id → 品詞情報に変換
  * 品詞連鎖ルールによる接続コスト補正も担う
+ *
+ * @internal
  */
-class PosIndex
+final class PosIndex
 {
 	/** @var array<int, array{pos: string, subpos: string, label: string}> */
 	private array $index = [];

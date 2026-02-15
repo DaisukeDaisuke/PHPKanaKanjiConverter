@@ -10,8 +10,10 @@ use pocketmine\utils\BinaryStream;
 /**
  * バイナリ接続コスト表
  * メモリに配列を持たず BinaryStream でオフセット直読み
+ *
+ * @internal
  */
-class ConnectionBinary
+final class ConnectionBinary
 {
 	private const HEADER_SIZE = 8;   // size(4) + reserved(4)
 	private const ENTRY_SIZE  = 2;   // int16

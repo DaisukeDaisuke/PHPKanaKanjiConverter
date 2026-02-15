@@ -10,8 +10,10 @@ namespace kanakanjiconverter;
  *
  * 注意:
  * - 本実装は簡易実演用です。実用の精度を上げるには大辞書や形態素解析器（MeCab 等）との連携を推奨します。
+ *
+ * @internal
  */
-class ConvertibleRomaji{
+final class ConvertibleRomaji{
 
 	// 変換辞書（長い候補を優先して扱うことを前提）
 	/**

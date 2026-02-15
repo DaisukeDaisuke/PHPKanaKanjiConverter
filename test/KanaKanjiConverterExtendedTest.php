@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * KanaKanjiConverter 追加テスト
  * 既存 KanaKanjiConverterTest.php と重複しないケースを中心に網羅
+ *
+ * @internal
  */
-class KanaKanjiConverterExtendedTest extends TestCase
+final class KanaKanjiConverterExtendedTest extends TestCase
 {
 	private static KanaKanjiConverter $converter;
 
