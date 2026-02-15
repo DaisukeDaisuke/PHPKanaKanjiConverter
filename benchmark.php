@@ -66,3 +66,4 @@ echo "Preload time: " . ms($preloadTime) . " ms\n";
 echo "Average convert time (10 AI words): " . ms($averageConvertTime) . " ms\n";
 
 echo (memory_get_peak_usage() / 1024 / 1024) . " MB\n";
+echo (memory_get_usage() / 1024 / 1024) . " MB\n";
