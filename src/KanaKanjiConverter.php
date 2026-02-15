@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace app;
+namespace kanakanjiconverter;
 
 final class KanaKanjiConverter
 {
@@ -16,6 +16,8 @@ final class KanaKanjiConverter
 	private bool $connectionLoaded = false;
 	private int $connectionSize = 0;
 	private array $connectionCostMap = [];
+
+	private array $fileCache = [];
 
 	public function __construct(string $dictPath)
 	{
@@ -78,16 +80,15 @@ final class KanaKanjiConverter
 		$baseDir = dirname($this->dictFile);
 		for ($i = 0; $i <= 9; $i++) {
 			$fname = $baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
-			if (!is_file($fname)) {
-				continue;
+
+			if(!isset($this->fileCache[$fname])){
+				if (!is_file($fname)) {
+					continue;
+				}
+				$this->fileCache[$fname] = file($fname, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 			}
 
-			$handle = fopen($fname, 'rb');
-			if ($handle === false) {
-				continue;
-			}
-
-			while (($line = fgets($handle)) !== false) {
+			foreach($this->fileCache[$fname] as $line){
 				$line = rtrim($line, "\r\n");
 				if ($line === '') {
 					continue;
@@ -104,8 +105,6 @@ final class KanaKanjiConverter
 					$result[$entry['reading']][] = $entry;
 				}
 			}
-
-			fclose($handle);
 		}
 
 		return $result;
@@ -407,54 +406,74 @@ final class KanaKanjiConverter
 
 	private function loadConnectionCosts(array $lattice): void
 	{
-		if ($this->connectionLoaded) {
-			return;
-		}
-		$this->connectionLoaded = true;
-
-		if (!is_file($this->connectionFile)) {
-			return;
-		}
-
-		$handle = fopen($this->connectionFile, 'rb');
-		if ($handle === false) {
-			return;
+		// 必要ならファイルをキャッシュから読み込む
+		if (!isset($this->fileCache[$this->connectionFile])) {
+			if (!is_file($this->connectionFile)) {
+				return;
+			}
+			$this->fileCache[$this->connectionFile] = file($this->connectionFile, FILE_IGNORE_NEW_LINES);
 		}
 
-		$line = fgets($handle);
-		if ($line === false) {
-			fclose($handle);
+		$lines = $this->fileCache[$this->connectionFile];
+		if (!isset($lines[0])) {
 			return;
 		}
 
-		$size = (int)trim($line);
+		$size = (int)trim($lines[0]);
 		if ($size <= 0) {
-			fclose($handle);
 			return;
 		}
 
-		$this->connectionSize = $size;
-		$indices = $this->collectConnectionIndices($lattice, $size);
+		// 既に size がセットされていなければ設定。異なる size の場合は既存マップをクリアして再構築。
+		if ($this->connectionSize <= 0) {
+			$this->connectionSize = $size;
+		} elseif ($this->connectionSize !== $size) {
+			$this->connectionCostMap = [];
+			$this->connectionSize = $size;
+		}
 
+		// ラティスに必要な接続インデックス（キー配列）を取得
+		$indices = $this->collectConnectionIndices($lattice, $this->connectionSize);
 		if (count($indices) === 0) {
-			fclose($handle);
+			$this->connectionLoaded = true;
 			return;
 		}
 
-		$targetCount = count($indices);
-		$index = 0;
+		// 読み込み済みかどうかを確認し、未読み込みのインデックスだけを集める
+		$missing = [];
+		foreach (array_keys($indices) as $idx) {
+			if (!isset($this->connectionCostMap[$idx])) {
+				$missing[$idx] = true;
+			}
+		}
 
-		while (($line = fgets($handle)) !== false) {
-			if (isset($indices[$index])) {
-				$this->connectionCostMap[$index] = (int)trim($line);
-				if (count($this->connectionCostMap) >= $targetCount) {
+		// すべて既に揃っていれば何もしない（フラグは true に）
+		if (empty($missing)) {
+			$this->connectionLoaded = true;
+			return;
+		}
+
+		// ファイルの 2 行目以降が接続コストの一次元配列（インデックス 0 に対応）なので、
+		// ファイルを走査して missing に含まれる行だけ読み込む
+		$currentIndex = 0; // file line 1 => index 0
+		foreach ($lines as $key => $line) {
+			if ($key === 0) {
+				// 先頭行はサイズなのでスキップ（$currentIndex はまだ 0 のまま）
+				continue;
+			}
+
+			if (isset($missing[$currentIndex])) {
+				$this->connectionCostMap[$currentIndex] = (int)trim($line);
+				unset($missing[$currentIndex]);
+
+				if (empty($missing)) {
 					break;
 				}
 			}
-			$index++;
+			$currentIndex++;
 		}
 
-		fclose($handle);
+		$this->connectionLoaded = true;
 	}
 
 	private function collectConnectionIndices(array $lattice, int $size): array

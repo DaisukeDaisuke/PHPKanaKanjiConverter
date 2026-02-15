@@ -1,9 +1,9 @@
 {
-    "name": "daisukedaisuke/PHPKanaKanjiConverter",
+    "name": "daisukedaisuke/phpkanakanjiconverter",
     "license": "mit",
     "autoload": {
         "psr-4": {
-            "app\\": "src/"
+            "kanakanjiconverter\\": "src/"
         }
     },
     "require": {}

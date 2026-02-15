@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 
-namespace app;
+namespace kanakanjiconverter;
 
 /**
  * ローマ字変換＋簡易かな→漢字変換の実装例
@@ -12,24 +12,9 @@ namespace app;
  * - 本実装は簡易実演用です。実用の精度を上げるには大辞書や形態素解析器（MeCab 等）との連携を推奨します。
  */
 class ConvertibleRomaji{
-	private $originText;
-	private $lowerText;
 
 	// 変換辞書（長い候補を優先して扱うことを前提）
 	private static $map = [
-		// 拗音・長めのもの（3文字）
-		'kya' => 'きゃ', 'kyu' => 'きゅ', 'kyo' => 'きょ',
-		'gya' => 'ぎゃ', 'gyu' => 'ぎゅ', 'gyo' => 'ぎょ',
-		'sha' => 'しゃ', 'shu' => 'しゅ', 'sho' => 'しょ',
-		'cha' => 'ちゃ', 'chu' => 'ちゅ', 'cho' => 'ちょ',
-		'nya' => 'にゃ', 'nyu' => 'にゅ', 'nyo' => 'にょ',
-		'hya' => 'ひゃ', 'hyu' => 'ひゅ', 'hyo' => 'ひょ',
-		'mya' => 'みゃ', 'myu' => 'みゅ', 'myo' => 'みょ',
-		'rya' => 'りゃ', 'ryu' => 'りゅ', 'ryo' => 'りょ',
-		'bya' => 'びゃ', 'byu' => 'びゅ', 'byo' => 'びょ',
-		'pya' => 'ぴゃ', 'pyu' => 'ぴゅ', 'pyo' => 'ぴょ',
-		'ja' => 'じゃ', 'ju' => 'じゅ', 'jo' => 'じょ', // 2-3文字混在するが最長一致で扱う
-
 		// 2文字（子音+母音等）
 		'ka' => 'か', 'ki' => 'き', 'ku' => 'く', 'ke' => 'け', 'ko' => 'こ',
 		'sa' => 'さ', 'shi' => 'し', 'si' => 'し', 'su' => 'す', 'se' => 'せ', 'so' => 'そ',
@@ -63,116 +48,124 @@ class ConvertibleRomaji{
 		'xyu' => 'ゅ', 'lyu' => 'ゅ',
 		'xyo' => 'ょ', 'lyo' => 'ょ',
 
-// --- zye 系 ---
-		'zya' => 'じゃ',
-		'zyu' => 'じゅ',
-		'zyo' => 'じょ',
-		'zye' => 'じぇ',
-		'zyi' => 'じぃ',
-
-// --- 拡張拗音 ---
-		'kye' => 'きぇ',
-		'kyi' => 'きぃ',
-		'gye' => 'ぎぇ',
-		'gyi' => 'ぎぃ',
-
-		'sye' => 'しぇ',
-		'syi' => 'しぃ',
-
-		'jye' => 'じぇ',
-		'jyi' => 'じぃ',
-
-		'tye' => 'ちぇ',
-		'tyi' => 'ちぃ',
-
-		'dye' => 'ぢぇ',
-		'dyi' => 'ぢぃ',
-
-		'nye' => 'にぇ',
-		'nyi' => 'にぃ',
-
-		'hye' => 'ひぇ',
-		'hyi' => 'ひぃ',
-
-		'bye' => 'びぇ',
-		'byi' => 'びぃ',
-
-		'pye' => 'ぴぇ',
-		'pyi' => 'ぴぃ',
-
-		'mye' => 'みぇ',
-		'myi' => 'みぃ',
-
-		'rye' => 'りぇ',
-		'ryi' => 'りぃ',
-
-// --- gwa / kwa 系 ---
-		'gwa' => 'ぐぁ',
-		'gwi' => 'ぐぃ',
-		'gwu' => 'ぐぅ',
-		'gwe' => 'ぐぇ',
-		'gwo' => 'ぐぉ',
-
-		'kwa' => 'くぁ',
-		'kwi' => 'くぃ',
-		'kwu' => 'くぅ',
-		'kwe' => 'くぇ',
-		'kwo' => 'くぉ',
-
-// --- q 系 ---
-		'qa' => 'くぁ',
-		'qi' => 'くぃ',
-		'qwu' => 'くぅ',
-		'qe' => 'くぇ',
-		'qo' => 'くぉ',
-
-// --- th / dh 系 ---
-		'thi' => 'てぃ',
-		'the' => 'てぇ',
-		'thu' => 'てゅ',
-		'tha' => 'てゃ',
-		'tho' => 'てょ',
-
-		'dhi' => 'でぃ',
-		'dhe' => 'でぇ',
-		'dhu' => 'でゅ',
-		'dha' => 'でゃ',
-		'dho' => 'でょ',
-
-// --- tw / dw 系 ---
-		'twa' => 'とぁ',
-		'twi' => 'とぃ',
-		'twu' => 'とぅ',
-		'twe' => 'とぇ',
-		'two' => 'とぉ',
-
-		'dwa' => 'どぁ',
-		'dwi' => 'どぃ',
-		'dwu' => 'どぅ',
-		'dwe' => 'どぇ',
-		'dwo' => 'どぉ',
-
-// --- f 拡張 ---
-		'fa' => 'ふぁ',
-		'fi' => 'ふぃ',
-		'fe' => 'ふぇ',
-		'fo' => 'ふぉ',
-		'fwu' => 'ふぅ',
-
-// --- w 拡張 ---
-		'wha' => 'うぁ',
-		'who' => 'うぉ',
-		'wi' => 'うぃ',
-		'we' => 'うぇ',
-
+		// 記号 半角 → 全角 追加分
+		'!' => '！',
+		'"' => '＂',
+		'#' => '＃',
+		'$' => '＄',
+		'%' => '％',
+		'&' => '＆',
+		'\'' => '＇',
+		'(' => '（',
+		')' => '）',
+		'*' => '＊',
+		'+' => '＋',
+		',' => '，',
+		'-' => 'ー',   // 長音は既存仕様維持
+		'.' => '．',
+		'/' => '／',
+		':' => '：',
+		';' => '；',
+		'<' => '＜',
+		'=' => '＝',
+		'>' => '＞',
+		'?' => '？',
+		'@' => '＠',
+		'[' => '［',
+		'\\' => '＼',
+		']' => '］',
+		'^' => '＾',
+		'_' => '＿',
+		'`' => '｀',
+		'{' => '｛',
+		'|' => '｜',
+		'}' => '｝',
+		'~' => '～',
 // --- ぢ / づ ---
 		'di' => 'ぢ',
 		'du' => 'づ',
+
+		'va' => 'ゔぁ',
+		'vi' => 'ゔぃ',
+		'vu' => 'ゔ',
+		've' => 'ゔぇ',
+		'vo' => 'ゔぉ',
+
+		'co' => 'こ',
+		'ca' => 'か',
+		'cu' => 'く',
+		'ce' => 'せ',
+
+		// --- 拡張拗音・短縮系 追加分 ---
+		// K 系
+		'kya' => 'きゃ', 'kyi' => 'きぃ', 'kyu' => 'きゅ', 'kye' => 'きぇ', 'kyo' => 'きょ',
+
+		// Q 系（くぁ系）
+		'qa' => 'くぁ', 'qi' => 'くぃ', 'qwu' => 'くぅ', 'qe' => 'くぇ', 'qo' => 'くぉ',
+
+		// G 系
+		'gya' => 'ぎゃ', 'gyi' => 'ぎぃ', 'gyu' => 'ぎゅ', 'gye' => 'ぎぇ', 'gyo' => 'ぎょ',
+
+		// GWA 系
+		'gwa' => 'ぐぁ', 'gwi' => 'ぐぃ', 'gwu' => 'ぐぅ', 'gwe' => 'ぐぇ', 'gwo' => 'ぐぉ',
+
+		// S / SH 系
+		'sya' => 'しゃ', 'syi' => 'しぃ', 'syu' => 'しゅ', 'sye' => 'しぇ', 'syo' => 'しょ',
+		'sha' => 'しゃ', 'she' => 'しぇ', 'shu' => 'しゅ', 'sho' => 'しょ',
+
+		// SW 系（すぁ系）
+		'swa' => 'すぁ', 'swi' => 'すぃ', 'swu' => 'すぅ', 'swe' => 'すぇ', 'swo' => 'すぉ',
+
+		// J / Z 系
+		'ja'  => 'じゃ', 'jyi' => 'じぃ', 'ju'  => 'じゅ', 'je'  => 'じぇ', 'jo'  => 'じょ',
+		'zya' => 'じゃ', 'zyi' => 'じぃ', 'zyu' => 'じゅ', 'zye' => 'じぇ', 'zyo' => 'じょ',
+
+		// T / CH 系
+		'tya' => 'ちゃ', 'tyi' => 'ちぃ', 'tyu' => 'ちゅ', 'tye' => 'ちぇ', 'tyo' => 'ちょ',
+		'cha' => 'ちゃ', 'che' => 'ちぇ', 'chu' => 'ちゅ', 'cho' => 'ちょ',
+
+		// TH 系（てゃ系）
+		'tha' => 'てゃ', 'thi' => 'てぃ', 'thu' => 'てゅ', 'the' => 'てぇ', 'tho' => 'てょ',
+
+		// TW 系（とぁ系）
+		'twa' => 'とぁ', 'twi' => 'とぃ', 'twu' => 'とぅ', 'twe' => 'とぇ', 'two' => 'とぉ',
+
+		// DY 系（ぢゃ等）
+		'dya' => 'ぢゃ', 'dyi' => 'ぢぃ', 'dyu' => 'ぢゅ', 'dye' => 'ぢぇ', 'dyo' => 'ぢょ',
+
+		// DH 系（でゃ等）
+		'dha' => 'でゃ', 'dhi' => 'でぃ', 'dhu' => 'でゅ', 'dhe' => 'でぇ', 'dho' => 'でょ',
+
+		// DW 系（どぁ等）
+		'dwa' => 'どぁ', 'dwi' => 'どぃ', 'dwu' => 'どぅ', 'dwe' => 'どぇ', 'dwo' => 'どぉ',
+
+		// N 系
+		'nya' => 'にゃ', 'nyi' => 'にぃ', 'nyu' => 'にゅ', 'nye' => 'にぇ', 'nyo' => 'にょ',
+
+		// H 系
+		'hya' => 'ひゃ', 'hyi' => 'ひぃ', 'hyu' => 'ひゅ', 'hye' => 'ひぇ', 'hyo' => 'ひょ',
+
+		// F 系
+		'fa'  => 'ふぁ', 'fi'  => 'ふぃ', 'fwu' => 'ふぅ', 'fe'  => 'ふぇ', 'fo'  => 'ふぉ',
+
+		// B 系
+		'bya' => 'びゃ', 'byi' => 'びぃ', 'byu' => 'びゅ', 'bye' => 'びぇ', 'byo' => 'びょ',
+
+		// P 系
+		'pya' => 'ぴゃ', 'pyi' => 'ぴぃ', 'pyu' => 'ぴゅ', 'pye' => 'ぴぇ', 'pyo' => 'ぴょ',
+
+		// M 系
+		'mya' => 'みゃ', 'myi' => 'みぃ', 'myu' => 'みゅ', 'mye' => 'みぇ', 'myo' => 'みょ',
+
+		// R 系
+		'rya' => 'りゃ', 'ryi' => 'りぃ', 'ryu' => 'りゅ', 'rye' => 'りぇ', 'ryo' => 'りょ',
+
+		// W 系（うぁ/うぃ/うぇ/うぉ）
+		'wha' => 'うぁ', 'wi' => 'うぃ', 'we' => 'うぇ', 'who' => 'うぉ',
+
 	];
 
-	public function __construct($text = ''){
-		$this->originText = $text;
-		$this->lowerText = mb_strtolower($text, 'UTF-8');
+	public function __construct(){
 	}
 
 	/**
@@ -180,12 +173,12 @@ class ConvertibleRomaji{
 	 *
 	 * $removeIllegalFlag: true の場合、変換できなかった文字は削る
 	 */
-	public function toHiragana($removeIllegalFlag = true){
+	public function toHiragana(string $originText, $removeIllegalFlag = true){
 		// 正規化: マクロン（ō 等） -> ou / uu のように簡易変換
 		$norm = str_replace(
 			['ā', 'ī', 'ū', 'ē', 'ō', 'Ā', 'Ī', 'Ū', 'Ē', 'Ō'],
 			['aa', 'ii', 'uu', 'ee', 'ou', 'aa', 'ii', 'uu', 'ee', 'ou'],
-			$this->lowerText
+			mb_strtolower($originText, 'UTF-8')
 		);
 
 		// 半角スペースや記号はそのままにするためトークン化（簡易）
@@ -211,39 +204,45 @@ class ConvertibleRomaji{
 		$len = mb_strlen($text, 'UTF-8');
 		$res = '';
 
-		// キャッシュ用に最大キー長を計算（ここは 3 で十分）
-		$maxKeyLen = 4;
+		// マップ中の最大キー長を計算して、上限4文字に制限する
+		$maxMapLen = 0;
+		foreach(array_keys(self::$map) as $k){
+			$kl = mb_strlen($k, 'UTF-8');
+			if($kl > $maxMapLen) $maxMapLen = $kl;
+		}
+		$maxKeyLen = min(4, $maxMapLen);
+
+		// 比較は小文字前提で行う（出力時に元の文字は参照しない）
+		$textLower = mb_strtolower($text, 'UTF-8');
 
 		while($pos < $len){
 			// 促音（っ）の処理: 同一子音が連続する場合
-			$cur = mb_substr($text, $pos, 1, 'UTF-8');
-			$next = ($pos + 1 < $len) ? mb_substr($text, $pos + 1, 1, 'UTF-8') : '';
+			$cur = mb_substr($textLower, $pos, 1, 'UTF-8');
+			$next = ($pos + 1 < $len) ? mb_substr($textLower, $pos + 1, 1, 'UTF-8') : '';
 			if($next !== '' && $cur === $next && preg_match('/[bcdfghjklmnpqrstvwxyz]/i', $cur)){
 				// ただし n の場合は促音ではない（ん の可能性）
 				if($cur !== 'n'){
 					$res .= 'っ';
-					$pos += 1; // 同一子音を一文字分スキップ（次のループで残りを処理）
+					$pos += 1; // 同一子音を一文字分スキップ
 					continue;
 				}
 			}
 
-			// 省略可能: 各長さ（長い順）でキー探索（最大3文字）
+			// 長いものから順に照合（最長 $maxKeyLen 文字）
 			$matched = false;
 			for($l = min($maxKeyLen, $len - $pos); $l >= 1; $l--){
-				$substr = mb_substr($text, $pos, $l, 'UTF-8');
-				// ローマ字辞書は小文字前提
-				$substrLower = mb_strtolower($substr, 'UTF-8');
+				$substr = mb_substr($textLower, $pos, $l, 'UTF-8');
 
 				// 特殊なケース: "n'" のような撥音明示
-				if($substrLower === "n'"){
+				if($substr === "n'"){
 					$res .= 'ん';
 					$pos += $l;
 					$matched = true;
 					break;
 				}
 
-				if(isset(self::$map[$substrLower])){
-					$res .= self::$map[$substrLower];
+				if(isset(self::$map[$substr])){
+					$res .= self::$map[$substr];
 					$pos += $l;
 					$matched = true;
 					break;
@@ -251,17 +250,15 @@ class ConvertibleRomaji{
 			}
 
 			if(!$matched){
-				// マッチしない場合:
-				// - 英数字や記号はそのまま（必要に応じて除去）
-				$ch = mb_substr($text, $pos, 1, 'UTF-8');
+				// マッチしない場合: 英数字は削除/保持、その他はそのまま出力
+				$ch = mb_substr($text, $pos, 1, 'UTF-8'); // 出力は元テキストから取得
 				if(preg_match('/[a-z0-9]/i', $ch)){
 					if($removeIllegalFlag){
-						// 何もしない（削る）
+						// 削る（何もしない）
 					}else{
 						$res .= $ch;
 					}
 				}else{
-					// 日本語やその他の文字はそのまま残す
 					$res .= $ch;
 				}
 				$pos += 1;
@@ -270,6 +267,7 @@ class ConvertibleRomaji{
 
 		return $res;
 	}
+
 
 	public function toKatakana($removeIllegalFlag = true){
 		$hiragana = $this->toHiragana($removeIllegalFlag);
@@ -291,3 +289,4 @@ class ConvertibleRomaji{
 		return $out;
 	}
 }
+
