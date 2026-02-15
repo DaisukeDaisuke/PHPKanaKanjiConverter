@@ -38,4 +38,8 @@ final class PHPKanaKanjiConverter{
 		$input = $this->romaji->toHiragana($input, $removeIllegalFlag);
 		return $this->kannziconverter->convert($input, $numofbest);
 	}
+
+	public function getRomajiConverter() : ConvertibleRomaji{
+		return $this->romaji;
+	}
 }
