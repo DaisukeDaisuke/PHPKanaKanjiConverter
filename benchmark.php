@@ -38,7 +38,7 @@ $testWords = [
 	"mottokireini",
 	"hanasigaaru",
 	"sannninndeiku",
-	"toukilyu",
+	"toukilyuu",
 	"kinougasugureteiru",
 	"atarasiikikaku",
 	"ookinakabu",
