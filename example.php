@@ -9,18 +9,21 @@ include __DIR__ . '/vendor/autoload.php';
 $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
 
-$input = "うちゅうじん";
-$converter = new PHPKanaKanjiConverter();
-$a = $converter->convert($input, false);
-echo $a["best"]["text"], "\n";
+foreach(["server", "konn", "sinnkannsenn", "converterですか"] as $input){
+	$converter = new PHPKanaKanjiConverter();
+	$result = $converter->convert($input);
 
-var_dump($a);
+	if(preg_match('/[A-Za-z]/u', $result["kana"])){
+		echo $result["original"], "\n";
+		continue;
+	}
 
-//var_dump($a);
+	if(!$converter->isValid($result)){
+		echo $result["kana"], "\n";
+		continue;
+	}
 
-foreach ($a["candidates"] as $candidate) {
-	echo $candidate["text"], "\n";
+	echo $result["best"]["text"], "\n";
 }
-
 echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
 echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";

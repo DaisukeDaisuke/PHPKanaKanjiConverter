@@ -32,11 +32,14 @@ final class PHPKanaKanjiConverter{
 	 * @param bool $removeIllegalFlag Optional flag to remove illegal characters during conversion. Default is false.
 	 * @param int $numofbest The number of best conversion results to return. Default is 3.
 	 *
-	 * @return array{best: array{text: string, tokens: array<int, array{surface: string, reading: string, word_cost: string, penalty: string}>}, cost: int, candidates: list<array{surface: string, reading: string, word_cost: string, penalty: string}>} An array of conversion results after performing Kana-Kanji conversion.
+	 * @return array{original: string, kana: string, best: array{text: string, cost: int,tokens: list<array{surface: string, reading: string, word_cost: string, penalty: string, pos: string, subpos: string, pos_label: string}>}, candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: string, penalty: string, pos: string, subpos: string, pos_label: string}>>}} An array of conversion results after performing Kana-Kanji conversion.
 	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3) : array{
-		$input = $this->romaji->toHiragana($input, $removeIllegalFlag);
-		return $this->kannziconverter->convert($input, $numofbest);
+		$kana = $this->romaji->toHiragana($input, $removeIllegalFlag);
+		$result = $this->kannziconverter->convert($kana, $numofbest);
+		$result["original"] = $input;
+		$result["kana"] = $kana;
+		return $result;
 	}
 
 	public function isValid(array $result) : bool{
