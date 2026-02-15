@@ -49,15 +49,15 @@ final class PHPKanaKanjiConverter{
 				return false;
 			}
 			if ($t["pos"] === "名詞" && $t["subpos"] !== "非自立") {
-				$valid = true;
+				return true;
 			}
 
 			if (in_array($t["pos"], ["動詞", "形容詞"])) {
-				$valid = true;
+				return true;
 			}
 		}
 
-		return $valid;
+		return false;
 	}
 
 	public function getRomajiConverter() : ConvertibleRomaji{
