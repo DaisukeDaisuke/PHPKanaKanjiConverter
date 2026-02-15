@@ -1,0 +1,10 @@
+{
+    "name": "owner/untitled3",
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "app\\": "src/"
+        }
+    },
+    "require": {}
+}
