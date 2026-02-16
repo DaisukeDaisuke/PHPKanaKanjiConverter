@@ -11,24 +11,110 @@ $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
 $converter = new PHPKanaKanjiConverter();
 
-// --- ユーザー辞書の構築 ---
-// --- ユーザー辞書の構築 ---
 $dict = new UserDictionary();
 $dict->addAll([
-// 「eremenntox」→ toHiragana → 「えれめんとx」だが x は変換されないため
+	// 「eremenntox」→ toHiragana → 「えれめんとx」だが x は変換されないため
 	// removeIllegalFlag=true にするか、reading を「えれめんと」にして別途処理する
 	['reading' => 'eremenntox', 'surface' => 'ElementX',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
 	// 「sod」→ 「そd」 → d が残るため reading は「そ」にするか入力を「sodo」等にする
+		[
+			'reading'   => 'anni',
+			'surface'   => 'Annihilation',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 2000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+		[
+			'reading'   => 'maaiiya',
+			'surface'   => 'まあいいや',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 1000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+		[
+			'reading'   => 'maaiiyo',
+			'surface'   => 'まあいいよ',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 1000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+		[
+			'reading'   => 'ai',
+			'surface'   => 'AI',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 2000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+		[
+			'reading'   => 'ime',
+			'surface'   => 'IME',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 2000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+		[
+			'reading'   => 'op',
+			'surface'   => 'Operator',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 2000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+	[
+		'reading'   => 'unn',
+		'surface'   => 'うん',
+		'mode'      => UserDictionary::MODE_SERVER,
+		'word_cost' => 2000,
+		'pos'       => '名詞',
+		'subpos'    => '一般',
+		'pos_label' => '名詞-一般',
+		'left_id'   => 1852,
+		'right_id'  => 1852,
+	],
+	[
+		'reading'   => 'unnsouda',
+		'surface'   => 'うんそうだ',
+		'mode'      => UserDictionary::MODE_SERVER,
+		'word_cost' => 2000,
+		'pos'       => '名詞',
+		'subpos'    => '一般',
+		'pos_label' => '名詞-一般',
+		'left_id'   => 1852,
+		'right_id'  => 1852,
+	],
+
 	//['reading' => 'sod',       'surface' => 'SOD SERVER',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
-	['reading' => 'test',       'surface' => 'てすと',  'mode' => UserDictionary::MODE_REPLACE, 'word_cost' => -5000, 'pos' => "名詞"],
-	['reading' => 'anni', 'surface' => 'Annihilation', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => 2000, 'pos' => "名詞", 'subpos' => "一般", 'left_id' => 1852, 'right_id' => 1852,],
 ]);
 
-$converter->registerUserDict('main', $dict);
+$converter->registerUserDict('server', $dict);
+
 
 $time = microtime(true);
 
-foreach(['anninnsuto-ru', 'annigasuki', 'anninahanndann'] as $input){
+foreach(['unnsoudane', 'unnko'] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["best"]["tokens"]);

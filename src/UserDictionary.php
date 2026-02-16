@@ -59,6 +59,9 @@ final class UserDictionary
 	 */
 	public function add(array $entry): void
 	{
+		if(!isset($entry['reading'])){
+			throw new \InvalidArgumentException('UserDictionary is broken');
+		}
 		$reading = $this->sanitize((string)($entry['reading'] ?? ''));
 		if ($reading === '') {
 			return;
