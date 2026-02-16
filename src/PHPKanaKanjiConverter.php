@@ -41,13 +41,40 @@ final class PHPKanaKanjiConverter
 	// 変換本体
 	// ----------------------------------------------------------------
 
+	/**
+	 * @return array{original: string, kana: string, best: array, candidates: list<array>}
+	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3): array
 	{
-		// Step1: ユーザー辞書のローマ字読みをプリプロセスで先に置換 → 残りをtoHiragana
+		// Step1: ローマ字→かな
 		$kana = $this->applyKanaMode($input, $removeIllegalFlag);
 
-		// Step2: 漢字変換（ユーザー辞書はプリプロセス済みなので内蔵辞書のみ）
-		$result = $this->kannziconverter->convert($kana, $numofbest);
+		// Step2: MODE_NO_CONVERT / MODE_REPLACE の全体一致チェック
+		//        （MODE_SERVER / MODE_MERGE はここでは処理しない）
+		$earlyResult = $this->applyEarlyModes($kana);
+		if ($earlyResult !== null) {
+			return $earlyResult + ['original' => $input, 'kana' => $kana];
+		}
+
+		// Step3: 漢字変換 --- ユーザーエントリをマージ ---
+		// MODE_KANA_ALT / MODE_MERGE / MODE_SERVER をまとめて収集
+		$mergeEntries  = $this->collectEntries(UserDictionary::MODE_MERGE);
+		$serverEntries = $this->collectEntries(UserDictionary::MODE_SERVER);
+
+		$hasUserEntries = ($mergeEntries !== [] || $serverEntries !== []);
+		if((count($mergeEntries) + count($serverEntries)) !== 0){
+			// MERGE / SERVER: 内蔵辞書 + ユーザー辞書でマージ変換
+			$userEntries = array_merge($mergeEntries, $serverEntries);
+			$result = $this->kannziconverter->convertWithUserEntries(
+				$kana,
+				$userEntries,
+				true,
+				$numofbest
+			);
+		} else {
+			// ユーザー辞書なし: 通常変換
+			$result = $this->kannziconverter->convert($kana, $numofbest);
+		}
 
 		$result['original'] = $input;
 		$result['kana']     = $kana;
@@ -105,59 +132,158 @@ final class PHPKanaKanjiConverter
 	private function applyKanaMode(string $input, bool $removeIllegalFlag): string
 	{
 		$rules = $this->buildPreprocessRules();
-
 		if ($rules === []) {
 			return $this->romaji->toHiragana($input, $removeIllegalFlag);
 		}
 
-		$inputLower = mb_strtolower($input, 'UTF-8');
-		$inputLen   = mb_strlen($input, 'UTF-8');
-		$pos        = 0;
-		$result     = '';
-		$pending    = '';
+		$lower    = mb_strtolower($input, 'UTF-8');
+		$totalLen = strlen($lower); // rulesはASCIIなのでバイト長で統一
+		$result   = '';
+		$offset   = 0;
 
-		while ($pos < $inputLen) {
-			$matched = false;
-
+		while ($offset < $totalLen) {
+			// 全ルールで最も手前に現れる位置を strpos で探す
+			$bestPos = PHP_INT_MAX;
 			foreach ($rules as $rule) {
-				if ($pos + $rule['len'] > $inputLen) {
-					continue;
+				$p = strpos($lower, $rule['lower'], $offset);
+				if ($p !== false && $p < $bestPos) {
+					$bestPos = $p;
 				}
-				if (mb_substr($inputLower, $pos, $rule['len'], 'UTF-8') !== $rule['lower']) {
-					continue;
-				}
+			}
 
-				$nextChar      = ($pos + $rule['len'] < $inputLen)
-					? mb_substr($inputLower, $pos + $rule['len'], 1, 'UTF-8') : '';
-				$lastChar      = mb_substr($rule['lower'], -1, 1, 'UTF-8');
-				$endsConsonant = (bool)preg_match('/[bcdfghjklmnpqrstvwxyz]/u', $lastChar);
-				$nextIsAlpha   = ($nextChar !== '' && (bool)preg_match('/[a-z]/u', $nextChar));
-
-				if ($endsConsonant && $nextIsAlpha) {
-					continue;
-				}
-
-				if ($pending !== '') {
-					$result  .= $this->romaji->toHiragana($pending, $removeIllegalFlag);
-					$pending  = '';
-				}
-				$result .= $rule['surface'];
-				$pos    += $rule['len'];
-				$matched = true;
+			if ($bestPos === PHP_INT_MAX) {
+				// 残り全部 toHiragana へ
+				$result .= $this->romaji->toHiragana(substr($input, $offset), $removeIllegalFlag);
 				break;
 			}
 
-			if (!$matched) {
-				$pending .= mb_substr($input, $pos, 1, 'UTF-8');
-				$pos++;
-			}
-		}
+			// bestPos で長い順にマッチを試す（rulesは長い順ソート済み）
+			$matchedRule  = null;
+			$matchedAfter = 0;
+			foreach ($rules as $rule) {
+				// この位置でマッチするか
+				if (strpos($lower, $rule['lower'], $bestPos) !== $bestPos) {
+					continue;
+				}
+				$afterPos  = $bestPos + strlen($rule['lower']);
+				$nextChar  = ($afterPos < $totalLen) ? $lower[$afterPos] : '';
+				$lastChar  = $rule['lower'][-1];
 
-		if ($pending !== '') {
-			$result .= $this->romaji->toHiragana($pending, $removeIllegalFlag);
+				// 衝突回避: 末尾子音 かつ 直後も英字 → スキップ
+				if (
+					strpos('bcdfghjklmnpqrstvwxyz', $lastChar) !== false
+					&& $nextChar >= 'a' && $nextChar <= 'z'
+				) {
+					continue;
+				}
+
+				$matchedRule  = $rule;
+				$matchedAfter = $afterPos;
+				break;
+			}
+
+			if ($matchedRule === null) {
+				// bestPos で全ルールが衝突 → 1バイト進めて再探索
+				$result .= $this->romaji->toHiragana(
+					substr($input, $offset, $bestPos - $offset + 1),
+					$removeIllegalFlag
+				);
+				$offset = $bestPos + 1;
+				continue;
+			}
+
+			// bestPos より前の pending を flush
+			if ($bestPos > $offset) {
+				$result .= $this->romaji->toHiragana(
+					substr($input, $offset, $bestPos - $offset),
+					$removeIllegalFlag
+				);
+			}
+
+			$result .= $matchedRule['surface'];
+			$offset  = $matchedAfter;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * 指定モードのエントリを全辞書から収集し
+	 * reading をひらがなに正規化した上で KanaKanjiConverter が期待する形式に変換する
+	 *
+	 * @return array<string, list<array>>
+	 */
+	private function collectEntries(int $mode): array
+	{
+		$result = [];
+		foreach ($this->userDicts as $dict) {
+			foreach ($dict->getByMode($mode) as $entry) {
+				$reading = $this->normalizeReading($entry['reading']);
+				if ($reading === '') {
+					continue;
+				}
+				$result[$reading][] = [
+					'surface'   => $entry['surface'],
+					'left_id'   => $entry['left_id'],
+					'right_id'  => $entry['right_id'],
+					'word_cost' => $entry['word_cost'],
+					// pos/subpos をノードに直接埋め込む
+					// buildCandidate() でこれを見てPosIndexをスキップする
+					'pos'       => $entry['pos'],
+					'subpos'    => $entry['subpos'],
+					'pos_label' => $entry['pos'] . '-' . $entry['subpos'],
+				];
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * applyEarlyModes() も reading を正規化してから比較する
+	 * MODE_NO_CONVERT / MODE_REPLACE の全体完全一致のみ処理する
+	 */
+	private function applyEarlyModes(string $kana): ?array
+	{
+		foreach ($this->userDicts as $dict) {
+			// getAll() で全エントリを走査し、読み正規化して比較
+			foreach ($dict->getAll() as $entry) {
+				if (!in_array($entry['mode'], [
+					UserDictionary::MODE_REPLACE,
+				], true)) {
+					continue;
+				}
+				$normalizedReading = $this->normalizeReading($entry['reading']);
+				if ($normalizedReading !== $kana) {
+					continue;
+				}
+				if ($entry['mode'] === UserDictionary::MODE_NO_CONVERT) {
+					return $this->buildSingleTokenResult($kana, $kana, $entry);
+				}
+				if ($entry['mode'] === UserDictionary::MODE_REPLACE) {
+					return $this->buildSingleTokenResult($entry['surface'], $kana, $entry);
+				}
+			}
+		}
+		return null;
+	}
+
+
+	/**
+	 * reading をひらがなに正規化する
+	 *
+	 * - すでにひらがな/カタカナ/漢字混じりならそのまま返す
+	 * - ASCII を含む場合は toHiragana() を通す（removeIllegalFlag=true で英字残滓を除去）
+	 * - 空文字になった場合は元の値を返す（登録ミス防止）
+	 */
+	private function normalizeReading(string $reading): string
+	{
+		// ASCII 文字が含まれていれば toHiragana() で変換
+		if (preg_match('/[A-Za-z]/u', $reading)) {
+			$converted = $this->romaji->toHiragana($reading, false);
+			// 変換結果が空でなければ採用
+			return $converted !== '' ? $converted : $reading;
+		}
+		return $reading;
 	}
 
 	/**

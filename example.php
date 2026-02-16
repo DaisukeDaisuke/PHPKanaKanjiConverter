@@ -15,21 +15,21 @@ $converter = new PHPKanaKanjiConverter();
 // --- ユーザー辞書の構築 ---
 $dict = new UserDictionary();
 $dict->addAll([
-	['reading' => 'daare',     'surface' => 'だあれ',  'word_cost' => -6000, 'pos' => "名詞"],
-	['reading' => 'ime',       'surface' => 'IME', 'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'daare',     'surface' => 'だあれ',  'mode' => UserDictionary::MODE_SERVER,'word_cost' => -6000, 'pos' => "名詞"],
+	['reading' => 'ime',       'surface' => 'IME',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
 	// 「eremenntox」→ toHiragana → 「えれめんとx」だが x は変換されないため
 	// removeIllegalFlag=true にするか、reading を「えれめんと」にして別途処理する
-	['reading' => 'eremenntox', 'surface' => 'ElementX', 'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'eremenntox', 'surface' => 'ElementX',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
 	// 「sod」→ 「そd」 → d が残るため reading は「そ」にするか入力を「sodo」等にする
-	['reading' => 'sod',       'surface' => 'SOD SERVER', 'word_cost' => -5000, 'pos' => "名詞"],
-	['reading' => 'test',       'surface' => 'てすと', 'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'sod',       'surface' => 'SOD SERVER',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'test',       'surface' => 'てすと',  'mode' => UserDictionary::MODE_REPLACE, 'word_cost' => -5000, 'pos' => "名詞"],
 ]);
 
 $converter->registerUserDict('main', $dict);
 
 $time = microtime(true);
 
-foreach(["sod", "eremenntox", "test", "daaresuki"] as $input){
+foreach(["daaredaaredaaredaaredaaredaaredaare"] as $input){
 	$result = $converter->convert($input);
 
 	//var_dump($result);

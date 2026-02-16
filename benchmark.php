@@ -70,7 +70,7 @@ $kana = new ConvertibleRomaji();
 $dict = new UserDictionary();
 $dict->addAll([
 	// 漢字変換フェーズでマージ（コスト優先で「誰」が選ばれやすくなる）
-	['reading' => 'だあれ', 'surface' => 'だあれ', 'mode' => UserDictionary::MODE_MERGE, 'word_cost' => -6000],
+	['reading' => 'だあれ', 'surface' => 'だあれ','word_cost' => -6000],
 
 	// サーバー側辞書エントリ
 	//['reading' => 'さーば', 'surface' => 'サーバー', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000],
