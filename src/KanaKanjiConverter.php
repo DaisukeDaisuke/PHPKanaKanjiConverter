@@ -238,6 +238,13 @@ final class KanaKanjiConverter
 					$edgeCost = $this->getConnectionCost($nodes[$prevId]['right_id'], $nodes[$nextId]['left_id']);
 					$cost = $costs[$prevId] + $edgeCost + $nodes[$nextId]['cost'];
 
+					if (
+						$nodes[$prevId]['left_id'] === 0 &&
+						$nodes[$nextId]['left_id'] === 0
+					) {
+						$cost += 8000; // 連続未知語ペナルティ
+					}
+
 					if ($cost < $costs[$nextId]) {
 						$costs[$nextId] = $cost;
 						$prev[$nextId] = $prevId;

@@ -21,13 +21,14 @@ $dict->addAll([
 	// 「sod」→ 「そd」 → d が残るため reading は「そ」にするか入力を「sodo」等にする
 	//['reading' => 'sod',       'surface' => 'SOD SERVER',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
 	['reading' => 'test',       'surface' => 'てすと',  'mode' => UserDictionary::MODE_REPLACE, 'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'anni', 'surface' => 'Annihilation', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => 2000, 'pos' => "名詞", 'subpos' => "一般", 'left_id' => 1852, 'right_id' => 1852,],
 ]);
 
 $converter->registerUserDict('main', $dict);
 
 $time = microtime(true);
 
-foreach(['さよならをいったあと、みんなでてをふりました。', 'こうじをおこなうべきだ'] as $input){
+foreach(['anninnsuto-ru', 'annigasuki', 'anninahanndann'] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["best"]["tokens"]);

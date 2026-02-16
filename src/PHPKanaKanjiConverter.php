@@ -298,6 +298,9 @@ final class PHPKanaKanjiConverter
 
 		foreach ($this->userDicts as $dict) {
 			foreach ($dict->getAll() as $entry) {
+				if($entry["mode"] !== UserDictionary::MODE_REPLACE){
+					continue;
+				}
 				$lower = mb_strtolower($entry['reading'], 'UTF-8');
 				if (isset($seen[$lower])) {
 					continue;
