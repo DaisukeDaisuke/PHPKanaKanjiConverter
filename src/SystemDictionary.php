@@ -181,6 +181,17 @@ final class SystemDictionary{
 				'left_id'   => 1852,
 				'right_id'  => 1852,
 			],
+			[
+				'reading'   => 'ipa',
+				'surface'   => 'IPA',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 3000,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,
+				'right_id'  => 1852,
+			],
 		]);
 
 		$converter->registerUserDict("system_server", $dict);

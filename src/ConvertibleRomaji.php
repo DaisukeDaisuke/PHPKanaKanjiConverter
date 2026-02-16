@@ -19,7 +19,7 @@ final class ConvertibleRomaji{
 	/**
 	 * @var array<string, string>
 	 */
-	private static array $map = [
+	private array $map = [
 		// 2文字（子音+母音等）
 		'ka' => 'か', 'ki' => 'き', 'ku' => 'く', 'ke' => 'け', 'ko' => 'こ',
 		'sa' => 'さ', 'shi' => 'し', 'si' => 'し', 'su' => 'す', 'se' => 'せ', 'so' => 'そ',
@@ -170,10 +170,10 @@ final class ConvertibleRomaji{
 
 		// W 系（うぁ/うぃ/うぇ/うぉ）
 		'wha' => 'うぁ', 'wi' => 'うぃ', 'we' => 'うぇ', 'who' => 'うぉ',
-
 	];
 
-	public function __construct(){
+	public function __construct(string $mapPath){
+		$this->map = array_merge($this->map, json_decode(file_get_contents($mapPath), true, JSON_THROW_ON_ERROR));
 	}
 
 	/**
@@ -182,6 +182,7 @@ final class ConvertibleRomaji{
 	 * $removeIllegalFlag: true の場合、変換できなかった文字は削る
 	 */
 	public function toHiragana(string $originText,bool $removeIllegalFlag = true){
+		$originText = mb_strtolower($originText);
 		// 正規化: マクロン（ō 等） -> ou / uu のように簡易変換
 		$norm = str_replace(
 			['ā', 'ī', 'ū', 'ē', 'ō', 'Ā', 'Ī', 'Ū', 'Ē', 'Ō'],
@@ -213,11 +214,11 @@ final class ConvertibleRomaji{
 
 		// マップ中の最大キー長を計算して、上限4文字に制限する
 		$maxMapLen = 0;
-		foreach(array_keys(self::$map) as $k){
+		foreach(array_keys($this->map) as $k){
 			$kl = mb_strlen($k, 'UTF-8');
 			if($kl > $maxMapLen) $maxMapLen = $kl;
 		}
-		$maxKeyLen = min(4, $maxMapLen);
+		$maxKeyLen = $maxMapLen;
 
 		// 比較は小文字前提で行う（出力時に元の文字は参照しない）
 		$textLower = mb_strtolower($text, 'UTF-8');
@@ -271,8 +272,8 @@ final class ConvertibleRomaji{
 					break;
 				}
 
-				if(isset(self::$map[$substr])){
-					$res .= self::$map[$substr];
+				if(isset($this->map[$substr])){
+					$res .= $this->map[$substr];
 					$pos += $l;
 					$matched = true;
 					break;

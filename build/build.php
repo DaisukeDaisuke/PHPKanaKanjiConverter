@@ -13,7 +13,7 @@ function buildDictionaryIndex(string $baseDir): void
 	$strPool   = '';  // reading文字列を連結
 	$strOffsets = []; // reading => offset in strPool（重複排除）
 
-	for ($i = 0; $i <= 9; $i++) {
+	for ($i = 0; $i <= 10; $i++) {
 		$fname = $baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
 		if (!is_file($fname)) {
 			continue;

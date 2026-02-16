@@ -114,7 +114,7 @@ $converter->registerUserDict('server', $dict);
 
 $time = microtime(true);
 
-foreach(['googlemap', 'unnko'] as $input){
+foreach(['watanabeyouko'] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["kana"]);
@@ -122,10 +122,10 @@ foreach(['googlemap', 'unnko'] as $input){
 	//var_dump($result["best"]["text"]);
 	//var_dump($result["kana"]);
 
-//	if(!$converter->isValid($result)){
-//		echo "kana: ".$result["kana"], "\n";
-//		continue;
-//	}
+	if(!$converter->isValid($result)){
+		echo "kana: ".$result["kana"], "\n";
+		continue;
+	}
 //
 //	foreach($result["candidates"] as $candidate){
 //		var_dump($candidate["text"], $candidate["tokens"]);

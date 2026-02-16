@@ -267,3 +267,10 @@ https://jetbead.hatenablog.com/entry/20160119/1453139047
 # special Thanks
 ## google/mozc
 https://github.com/google/mozc
+
+
+# enamdict
+
+https://www.edrdg.org/enamdict/enamdict_doc.html  
+  
+`http://ftp.edrdg.org/pub/Nihongo/enamdict.gz`  

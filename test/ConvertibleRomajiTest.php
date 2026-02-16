@@ -16,7 +16,7 @@ final class ConvertibleRomajiTest extends TestCase{
 	private ConvertibleRomaji $romaji;
 
 	protected function setUp() : void{
-		$this->romaji = new ConvertibleRomaji();
+		$this->romaji = new ConvertibleRomaji((__DIR__ . '/../src/dictionary_oss/map.json'));
 	}
 
 	// =========================================================

@@ -1,0 +1,4 @@
+JMnedict / ENAMDICT data derived from The Electronic Dictionary Research and Development Group (EDRDG).
+Please maintain appropriate acknowledgement when redistributing.
+EDRDG: https://www.edrdg.org/
+If you combine other sources, ensure those sources' attribution terms are followed.

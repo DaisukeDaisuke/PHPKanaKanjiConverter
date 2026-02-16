@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace kanakanjiconverter;
 
+use Symfony\Component\Filesystem\Path;
+
 /**
  * @internal
  */
@@ -18,14 +20,9 @@ final class KanaKanjiConverter
 
 	public function __construct(string $dictPath)
 	{
-		if (is_file($dictPath)) {
-			$this->dictFile = $dictPath;
-			$this->connectionFile = dirname($dictPath) . DIRECTORY_SEPARATOR . 'connection_single_column.txt';
-		} else {
-			$base = rtrim($dictPath, DIRECTORY_SEPARATOR);
-			$this->dictFile = $base . DIRECTORY_SEPARATOR . 'dictionary00.txt';
-			$this->connectionFile = $base . DIRECTORY_SEPARATOR . 'connection_single_column.txt';
-		}
+		$base = rtrim($dictPath, DIRECTORY_SEPARATOR);
+		$this->dictFile = Path::join($base, 'dictionary00.txt');
+		$this->connectionFile = Path::join($base, 'connection_single_column.txt');
 	}
 
 	/**

@@ -65,8 +65,6 @@ $preloadTime = $endPreload - $startPreload;
  * ========================= */
 $totalConvertTime = 0.0;
 
-$kana = new ConvertibleRomaji();
-
 $dict = new UserDictionary();
 $dict->addAll([
 	// 漢字変換フェーズでマージ（コスト優先で「誰」が選ばれやすくなる）

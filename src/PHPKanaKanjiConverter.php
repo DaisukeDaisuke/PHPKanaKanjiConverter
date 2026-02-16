@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace kanakanjiconverter;
 
+use Symfony\Component\Filesystem\Path;
+
 final class PHPKanaKanjiConverter
 {
 	private ConvertibleRomaji $romaji;
@@ -13,8 +15,9 @@ final class PHPKanaKanjiConverter
 
 	public function __construct()
 	{
-		$this->romaji = new ConvertibleRomaji();
-		$dictDir = realpath(__DIR__ . '/dictionary_oss') ?: (__DIR__ . '/dictionary_oss');
+		$oss = Path::join(__DIR__ , 'dictionary_oss');
+		$dictDir = realpath($oss) ?: (__DIR__ . '/dictionary_oss');
+		$this->romaji = new ConvertibleRomaji(Path::join($dictDir , "map.json"));
 		$this->kannziconverter = new KanaKanjiConverter($dictDir);
 
 		SystemDictionary::apply($this);

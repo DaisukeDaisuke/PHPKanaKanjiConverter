@@ -21,7 +21,7 @@ if (!is_file($inPath)) {
 }
 
 // 設定: 必要ならここを修正
-$defaultCost = 5000;
+$defaultCost = 1700;
 
 // ENAMDICT 品詞コード -> LID/RID マップ（必要に応じて編集してください）
 $code2lid = [
@@ -126,17 +126,16 @@ foreach ($lines as $rawLine) {
 	if ($parsed === null) continue;
 
 	$surface = $parsed['surface'];
-	$reading = normalize_reading($parsed['reading']);
-	if ($reading === '' || $surface === '') continue;
 
 	$surface = mb_convert_kana($surface, "KVa");
 	$surface = mb_strtolower($surface, "UTF-8");
 
+	$reading = mb_convert_kana($parsed['reading'], "c");
+
 // 英字のみかどうか判定
-	if (preg_match('/^[a-z]+$/', $surface)) {
+	if (preg_match('/^[a-z]+$/', $surface) && strlen($surface) >= 4) {
 		// ここで英語専用mapに登録する
 		$englishMap[$surface] = $surface;
-		continue;
 	}
 
 
