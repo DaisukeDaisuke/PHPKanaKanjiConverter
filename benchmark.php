@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use kanakanjiconverter\PHPKanaKanjiConverter;
 use kanakanjiconverter\ConvertibleRomaji;
+use kanakanjiconverter\UserDictionary;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -46,7 +47,10 @@ $testWords = [
 	"terebiwomiru",
 	"kannsilyasareteiru",
 	"kinoutabeta",
-	"suuzinotesuto1234567890tesuto"
+	"suuzinotesuto1234567890tesuto",
+	"daare",
+	"kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara",
+	"kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara,kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara,kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara"
 ];
 
 /* =========================
@@ -64,6 +68,18 @@ $preloadTime = $endPreload - $startPreload;
 $totalConvertTime = 0.0;
 
 $kana = new ConvertibleRomaji();
+
+$dict = new UserDictionary();
+$dict->addAll([
+	// 漢字変換フェーズでマージ（コスト優先で「誰」が選ばれやすくなる）
+	['reading' => 'だあれ', 'surface' => 'だあれ', 'mode' => UserDictionary::MODE_MERGE, 'word_cost' => -6000],
+
+	// サーバー側辞書エントリ
+	//['reading' => 'さーば', 'surface' => 'サーバー', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000],
+]);
+
+$converter->registerUserDict('main', $dict);
+
 
 foreach ($testWords as $input) {
 	$start = microtime(true);

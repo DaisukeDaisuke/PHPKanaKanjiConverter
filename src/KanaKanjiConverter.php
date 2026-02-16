@@ -384,4 +384,80 @@ final class KanaKanjiConverter
 		// ConnectionBinary の初回アクセス時に自動ロードされるため何もしない
 		$this->getConnectionBinary();
 	}
+
+
+// KanaKanjiConverter.php への追加メソッド（既存クラスの末尾に追記）
+
+// ----------------------------------------------------------------
+// ユーザーエントリを受け取る変換エントリポイント
+// ----------------------------------------------------------------
+
+	// KanaKanjiConverter.php の末尾クラス内に追記
+
+	/**
+	 * ユーザーエントリをマージして変換する
+	 *
+	 * @param string                             $hiragana       変換対象
+	 * @param array<string, list<array>> $userEntries    読み => [エントリ配列]
+	 * @param bool                               $useBuiltinDict 内蔵辞書を使うか
+	 * @param int                                $nbest          候補数
+	 * @return array{best: array, candidates: list<array>}
+	 */
+	public function convertWithUserEntries(
+		string $hiragana,
+		array  $userEntries,
+		bool   $useBuiltinDict,
+		int    $nbest = 1
+	): array {
+		$nbest = max(1, min($nbest, 100));
+
+		$entriesByReading = $useBuiltinDict
+			? $this->mergeEntries($this->collectEntriesFromDictionaries($hiragana), $userEntries)
+			: $userEntries;
+
+		$lattice    = $this->buildLattice($hiragana, $entriesByReading);
+		$this->loadConnectionCosts();
+		$forward    = $this->forwardDp($lattice);
+		$candidates = $this->backwardAStar($lattice, $forward['costs'], $nbest);
+
+		$best = $candidates[0] ?? [
+			'text'   => $hiragana,
+			'tokens' => [[
+				'surface'   => $hiragana,
+				'reading'   => $hiragana,
+				'word_cost' => 0,
+				'penalty'   => 0,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+			]],
+			'cost' => 0,
+		];
+
+		return ['best' => $best, 'candidates' => $candidates];
+	}
+
+	/**
+	 * 内蔵辞書エントリとユーザーエントリをマージする
+	 * ユーザーエントリを先頭に挿入することで低コスト＝高優先を実現する
+	 *
+	 * @param array<string, list<array>> $builtin
+	 * @param array<string, list<array>> $user
+	 * @return array<string, list<array>>
+	 */
+	private function mergeEntries(array $builtin, array $user): array
+	{
+		// array_unshift は内部で全要素再インデックスが走るため O(n)
+		// array_merge はコピーだが1回のアロケーションで済む
+		$merged = $builtin;
+		foreach ($user as $reading => $entries) {
+			if (!isset($merged[$reading])) {
+				$merged[$reading] = $entries;
+			} else {
+				// ユーザーエントリを先頭に: unshift ではなく merge
+				$merged[$reading] = array_merge($entries, $merged[$reading]);
+			}
+		}
+		return $merged;
+	}
 }
