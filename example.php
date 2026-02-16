@@ -114,10 +114,10 @@ $converter->registerUserDict('server', $dict);
 
 $time = microtime(true);
 
-foreach(['unnsoudane', 'unnko'] as $input){
+foreach(['googlemap', 'unnko'] as $input){
 	$result = $converter->convert($input);
 
-	var_dump($result["best"]["tokens"]);
+	var_dump($result["kana"]);
 
 	//var_dump($result["best"]["text"]);
 	//var_dump($result["kana"]);
