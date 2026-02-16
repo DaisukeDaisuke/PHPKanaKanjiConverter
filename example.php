@@ -36,24 +36,26 @@ $converter->registerUserDict('server', $dict);
 
 $time = microtime(true);
 
-foreach(['test'] as $input){
+foreach(['tunaidatewohanasanaideyo'] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["kana"]);
 
-	//var_dump($result["best"]["text"]);
+
 	//var_dump($result["kana"]);
 
 	if(!$converter->isValid($result)){
 		echo "kana: ".$result["kana"], "\n";
 		continue;
 	}
-//
-//	foreach($result["candidates"] as $candidate){
-//		var_dump($candidate["text"], $candidate["tokens"]);
-//	}
+////
+	foreach($result["candidates"] as $candidate){
+		var_dump($candidate["text"]);
+		//var_dump($candidate["text"], $candidate["tokens"]);
+	}
 
 	echo "no-maru:". $result["best"]["text"], "\n";
+	//var_dump($result["best"]["tokens"]);
 }
 $time = microtime(true) - $time;
 

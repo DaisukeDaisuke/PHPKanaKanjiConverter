@@ -47,7 +47,8 @@ final class PHPKanaKanjiConverter
 	// ----------------------------------------------------------------
 
 	/**
-	 * @return array{original: string, kana: string, best: array, candidates: list<array>}
+	 * phpstormなどの補完で有益なため消さないこと
+	 * @return array{original: string, kana: string, best: array{text: string, cost: int,tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>}, candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>>}}
 	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3): array
 	{

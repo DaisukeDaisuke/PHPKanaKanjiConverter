@@ -19,6 +19,8 @@ final class SystemDictionary{
 			['reading' => 'then',         'surface' => 'then',      'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'JavaScript',   'surface' => 'JavaScript','mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'tilyattogpt',  'surface' => 'chatGPT',  'mode' => UserDictionary::MODE_REPLACE],
+			['reading' => 'claude',  	'surface' => 'Claude',  'mode' => UserDictionary::MODE_REPLACE],
+			['reading' => 'chatgpt',  	'surface' => 'ChatGPT',  'mode' => UserDictionary::MODE_REPLACE],
 		]);
 		$converter->registerUserDict("system_replace", $dict);
 
@@ -277,6 +279,28 @@ final class SystemDictionary{
 				'pos_label' => '名詞-一般',
 				'left_id'   => 1852,
 				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'tamuro',
+				'surface'   => 'たむろ',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 1000,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,
+				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'tewohana',
+				'surface'   => '手を離',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => -1000,
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 577,
+				'right_id'  => 577,
 			],
 		]);
 

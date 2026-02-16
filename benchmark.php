@@ -87,7 +87,7 @@ foreach ($testWords as $input) {
 	$totalConvertTime += $elapsed;
 
 	echo "Input: {$input}\n";
-	echo "nihonngo: " . $kana->toHiragana($input, false) . "\n";
+	echo "nihonngo: " . $converter->getRomajiConverter()->toHiragana($input, false) . "\n";
 	echo $a["best"]["text"], "\n";
 	echo "Convert time: " . ms($elapsed) . " ms\n\n";
 }
