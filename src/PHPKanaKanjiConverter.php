@@ -16,6 +16,8 @@ final class PHPKanaKanjiConverter
 		$this->romaji = new ConvertibleRomaji();
 		$dictDir = realpath(__DIR__ . '/dictionary_oss') ?: (__DIR__ . '/dictionary_oss');
 		$this->kannziconverter = new KanaKanjiConverter($dictDir);
+
+		SystemDictionary::apply($this);
 	}
 
 	// ----------------------------------------------------------------
