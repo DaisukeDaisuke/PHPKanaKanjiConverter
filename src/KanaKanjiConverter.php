@@ -116,24 +116,20 @@ final class KanaKanjiConverter
 					$penalty = ($entry['surface'] === $reading) ? self::SAME_SURFACE_PENALTY : 0;
 
 					$nodes[$nextId] = [
-						'id'        => $nextId,
-						'start'     => $start,
-						'end'       => $end,
-						'reading'   => $reading,   // 正規化済みreadingをそのまま使う
-						'surface'   => $entry['surface'],
-						'left_id'   => $entry['left_id'],
-						'right_id'  => $entry['right_id'],
+						'id' => $nextId,
+						'start' => $start,
+						'end' => $end,
+						'reading' => $reading,
+						'surface' => $entry['surface'],
+						'left_id' => $entry['left_id'],
+						'right_id' => $entry['right_id'],
 						'word_cost' => $entry['word_cost'],
-						'penalty'   => $penalty,
-						'cost'      => $entry['word_cost'] + $penalty,
-						// ユーザー辞書由来の pos/subpos を保持（なければ空文字）
-						'pos'       => $entry['pos']       ?? '',
-						'subpos'    => $entry['subpos']    ?? '',
-						'pos_label' => $entry['pos_label'] ?? '',
+						'penalty' => $penalty,
+						'cost' => $entry['word_cost'] + $penalty,
 					];
 
 					$nodesByStart[$start][] = $nextId;
-					$nodesByEnd[$end][]     = $nextId;
+					$nodesByEnd[$end][] = $nextId;
 					$nextId++;
 				}
 
@@ -336,14 +332,11 @@ final class KanaKanjiConverter
 	}
 
 // buildCandidate() の tokens に品詞情報を追加
-// KanaKanjiConverter.php
-// buildCandidate() を以下に差し替え
-
 	private function buildCandidate(array $path, array $nodes, int $totalCost): array
 	{
-		$ids      = array_reverse($path);
-		$text     = '';
-		$tokens   = [];
+		$ids    = array_reverse($path);
+		$text   = '';
+		$tokens = [];
 		$posIndex = $this->getPosIndex();
 
 		foreach ($ids as $id) {
@@ -352,27 +345,16 @@ final class KanaKanjiConverter
 				continue;
 			}
 
-			// ユーザー辞書由来のノードは pos/subpos が直接埋め込まれている
-			// left_id=0 は BOS/EOS なので PosIndex を通すと BOS/EOS になってしまう
-			if (isset($node['pos']) && $node['pos'] !== '') {
-				$pos      = $node['pos'];
-				$subpos   = $node['subpos']   ?? '*';
-				$posLabel = $node['pos_label'] ?? ($pos . '-' . $subpos);
-			} else {
-				$posInfo  = $posIndex->getPos($node['left_id']);
-				$pos      = $posInfo['pos'];
-				$subpos   = $posInfo['subpos'];
-				$posLabel = $posInfo['label'];
-			}
+			$posInfo = $posIndex->getPos($node['left_id']);
 
 			$tokens[] = [
 				'surface'   => $node['surface'],
 				'reading'   => $node['reading'],
 				'word_cost' => $node['word_cost'],
 				'penalty'   => $node['penalty'],
-				'pos'       => $pos,
-				'subpos'    => $subpos,
-				'pos_label' => $posLabel,
+				'pos'       => $posInfo['pos'],       // 品詞（名詞・動詞等）
+				'subpos'    => $posInfo['subpos'],     // 品詞細分類
+				'pos_label' => $posInfo['label'],      // "名詞-副詞的" 等
 			];
 			$text .= $node['surface'];
 		}
@@ -401,85 +383,5 @@ final class KanaKanjiConverter
 	{
 		// ConnectionBinary の初回アクセス時に自動ロードされるため何もしない
 		$this->getConnectionBinary();
-	}
-
-
-// KanaKanjiConverter.php への追加メソッド（既存クラスの末尾に追記）
-
-// ----------------------------------------------------------------
-// ユーザーエントリを受け取る変換エントリポイント
-// ----------------------------------------------------------------
-
-	// KanaKanjiConverter.php の末尾クラス内に追記
-	// ----------------------------------------------------------------
-// KanaKanjiConverter.php への追記
-// 既存の convert() メソッドの直後に追加する
-// ----------------------------------------------------------------
-
-	/**
-	 * ユーザー辞書エントリをマージして変換する
-	 *
-	 * @param string                     $hiragana       変換対象のひらがな
-	 * @param array<string, list<array>> $userEntries    読み => [エントリ配列] 形式
-	 * @param bool                       $useBuiltinDict 内蔵辞書を使うか
-	 * @param int                        $nbest          候補数
-	 */
-	public function convertWithUserEntries(
-		string $hiragana,
-		array  $userEntries,
-		bool   $useBuiltinDict,
-		int    $nbest = 1
-	): array {
-		$nbest = max(1, min($nbest, 100));
-
-		if ($useBuiltinDict) {
-			$builtinEntries   = $this->collectEntriesFromDictionaries($hiragana);
-			$entriesByReading = $this->mergeEntries($builtinEntries, $userEntries);
-		} else {
-			$entriesByReading = $userEntries;
-		}
-
-		$lattice = $this->buildLattice($hiragana, $entriesByReading);
-		$this->loadConnectionCosts();
-
-		$forward    = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $nbest);
-
-		$best = $candidates[0] ?? [
-			'text'   => $hiragana,
-			'tokens' => [[
-				'surface'   => $hiragana,
-				'reading'   => $hiragana,
-				'word_cost' => 0,
-				'penalty'   => 0,
-				'pos'       => '名詞',
-				'subpos'    => '一般',
-				'pos_label' => '名詞-一般',
-			]],
-			'cost' => 0,
-		];
-
-		return ['best' => $best, 'candidates' => $candidates];
-	}
-
-	/**
-	 * 内蔵辞書エントリとユーザーエントリをマージする
-	 * ユーザーエントリは先頭に挿入して優先度を上げる
-	 *
-	 * @param array<string, list<array>> $builtin
-	 * @param array<string, list<array>> $user
-	 * @return array<string, list<array>>
-	 */
-	private function mergeEntries(array $builtin, array $user): array
-	{
-		$merged = $builtin;
-		foreach ($user as $reading => $entries) {
-			if (!isset($merged[$reading])) {
-				$merged[$reading] = [];
-			}
-			// ユーザーエントリを先頭に挿入（低コスト = 高優先）
-			array_unshift($merged[$reading], ...$entries);
-		}
-		return $merged;
 	}
 }

@@ -57,35 +57,7 @@ final class PHPKanaKanjiConverter
 			return $earlyResult + ['original' => $input, 'kana' => $kana];
 		}
 
-		// Step3: 漢字変換 --- ユーザーエントリをマージ ---
-		// MODE_KANA_ALT / MODE_MERGE / MODE_SERVER をまとめて収集
-		$altEntries    = $this->collectEntries(UserDictionary::MODE_KANA_ALT);
-		$mergeEntries  = $this->collectEntries(UserDictionary::MODE_MERGE);
-		$serverEntries = $this->collectEntries(UserDictionary::MODE_SERVER);
-
-		$hasUserEntries = ($altEntries !== [] || $mergeEntries !== [] || $serverEntries !== []);
-
-		if ($altEntries !== []) {
-			// KANA_ALT: ユーザー辞書のみで変換
-			$result = $this->kannziconverter->convertWithUserEntries(
-				$kana,
-				$altEntries,
-				false,
-				$numofbest
-			);
-		} elseif ($hasUserEntries) {
-			// MERGE / SERVER: 内蔵辞書 + ユーザー辞書でマージ変換
-			$userEntries = array_merge($mergeEntries, $serverEntries);
-			$result = $this->kannziconverter->convertWithUserEntries(
-				$kana,
-				$userEntries,
-				true,
-				$numofbest
-			);
-		} else {
-			// ユーザー辞書なし: 通常変換
-			$result = $this->kannziconverter->convert($kana, $numofbest);
-		}
+		$result = $this->kannziconverter->convert($input, $numofbest);
 
 		$result['original'] = $input;
 		$result['kana']     = $kana;
@@ -142,28 +114,130 @@ final class PHPKanaKanjiConverter
 
 	private function applyKanaMode(string $input, bool $removeIllegalFlag): string
 	{
-		$entries = $this->collectEntries(UserDictionary::MODE_KANA);
+		$allPreprocess = $this->buildPreprocessRules();
 
-		if ($entries === []) {
+		if ($allPreprocess === []) {
 			return $this->romaji->toHiragana($input, $removeIllegalFlag);
 		}
 
-		if (method_exists($this->romaji, 'addCustomRule')) {
-			foreach ($entries as $reading => $entryList) {
-				foreach ($entryList as $e) {
-					$this->romaji->addCustomRule($reading, $e['surface']);
-				}
-			}
-			$result = $this->romaji->toHiragana($input, $removeIllegalFlag);
-			if (method_exists($this->romaji, 'clearCustomRules')) {
-				$this->romaji->clearCustomRules();
-			}
-			return $result;
-		}
-
-		return $this->romaji->toHiragana($input, $removeIllegalFlag);
+		// プレースホルダ変換しながら入力を左から処理する
+		$result = $this->preprocessInput($input, $allPreprocess, $removeIllegalFlag);
+		return $result;
 	}
 
+	/**
+	 * 全辞書からASCIIを含む reading のルールを収集し、長い順にソートして返す
+	 *
+	 * @return list<array{reading: string, surface: string, len: int}>
+	 */
+	private function buildPreprocessRules(): array
+	{
+		$rules = [];
+		$seen  = [];
+		foreach ($this->userDicts as $dict) {
+			foreach ($dict->getAll() as $entry) {
+				$raw = $entry['reading'];
+				if (!preg_match('/[A-Za-z0-9]/u', $raw)) {
+					continue;
+				}
+				$key = mb_strtolower($raw, 'UTF-8');
+				if (isset($seen[$key])) {
+					continue;
+				}
+				$seen[$key] = true;
+				$rules[] = [
+					'reading' => $raw,
+					'surface' => $entry['surface'],
+					'len'     => mb_strlen($raw, 'UTF-8'),
+				];
+			}
+		}
+		// 長い reading を優先（最長一致）
+		usort($rules, static fn($a, $b) => $b['len'] <=> $a['len']);
+		return $rules;
+	}
+
+	/**
+	 * 入力文字列を左から走査し、ユーザー辞書の reading に最長一致したら
+	 * surface に置換する。一致しなかった部分は toHiragana() で変換する。
+	 *
+	 * 衝突回避ルール:
+	 *   ある reading にマッチしたとき、その直後の文字が
+	 *   「ローマ字として継続しうる ASCII アルファベット」であれば
+	 *   そのマッチは無効とみなしてスキップする（より長い別ルールに任せる）。
+	 *   例: reading="sod", 入力="sodoku" → 直後が 'o' (母音) → スキップ
+	 *       reading="server", 入力="servero" → 直後が 'o' → スキップしない
+	 *       （"server" より長いルールがないため "server" が確定し "o" は別処理）
+	 *
+	 * 実際には「reading の末尾が子音で、直後も ASCII アルファベット」のとき
+	 * のみスキップすることで「単語が途中で切れる」誤爆を防ぐ。
+	 */
+	private function preprocessInput(string $input, array $rules, bool $removeIllegalFlag): string
+	{
+		$inputLower = mb_strtolower($input, 'UTF-8');
+		$inputLen   = mb_strlen($input, 'UTF-8');
+		$pos        = 0;
+		$result     = '';
+		$pending    = ''; // まだ toHiragana() に渡していないバッファ
+
+		while ($pos < $inputLen) {
+			$matched = false;
+
+			foreach ($rules as $rule) {
+				$rLen   = $rule['len'];
+				$rLower = mb_strtolower($rule['reading'], 'UTF-8');
+
+				if ($pos + $rLen > $inputLen) {
+					continue;
+				}
+
+				$chunk = mb_substr($inputLower, $pos, $rLen, 'UTF-8');
+				if ($chunk !== $rLower) {
+					continue;
+				}
+
+				// 直後の文字を確認
+				$nextChar = ($pos + $rLen < $inputLen)
+					? mb_substr($inputLower, $pos + $rLen, 1, 'UTF-8')
+					: '';
+
+				// 衝突回避: reading の末尾が子音 かつ 直後も ASCII アルファベットなら無効
+				$readingLastChar = mb_substr($rLower, -1, 1, 'UTF-8');
+				$isReadingEndsWithConsonant = preg_match('/[bcdfghjklmnpqrstvwxyz]/u', $readingLastChar);
+				$isNextAlpha = ($nextChar !== '' && preg_match('/[a-z]/u', $nextChar));
+
+				if ($isReadingEndsWithConsonant && $isNextAlpha) {
+					// 後続 ASCII が続くので、このマッチは無効
+					// → より長いルールが存在するか、ローマ字として処理させる
+					continue;
+				}
+
+				// マッチ確定: pending を先に toHiragana() で変換して flush
+				if ($pending !== '') {
+					$result  .= $this->romaji->toHiragana($pending, $removeIllegalFlag);
+					$pending  = '';
+				}
+
+				$result .= $rule['surface'];
+				$pos    += $rLen;
+				$matched = true;
+				break;
+			}
+
+			if (!$matched) {
+				// マッチしなかった文字は pending に積む（まとめて toHiragana() へ）
+				$pending .= mb_substr($input, $pos, 1, 'UTF-8');
+				$pos++;
+			}
+		}
+
+		// 残った pending を変換
+		if ($pending !== '') {
+			$result .= $this->romaji->toHiragana($pending, $removeIllegalFlag);
+		}
+
+		return $result;
+	}
 	private function buildSingleTokenResult(string $surface, string $reading, array $entry): array
 	{
 		$token = [
@@ -181,38 +255,6 @@ final class PHPKanaKanjiConverter
 			'candidates' => [$candidate],
 		];
 	}
-
-	/**
-	 * 指定モードのエントリを全辞書から収集し
-	 * reading をひらがなに正規化した上で KanaKanjiConverter が期待する形式に変換する
-	 *
-	 * @return array<string, list<array>>
-	 */
-	private function collectEntries(int $mode): array
-	{
-		$result = [];
-		foreach ($this->userDicts as $dict) {
-			foreach ($dict->getByMode($mode) as $entry) {
-				$reading = $this->normalizeReading($entry['reading']);
-				if ($reading === '') {
-					continue;
-				}
-				$result[$reading][] = [
-					'surface'   => $entry['surface'],
-					'left_id'   => $entry['left_id'],
-					'right_id'  => $entry['right_id'],
-					'word_cost' => $entry['word_cost'],
-					// pos/subpos をノードに直接埋め込む
-					// buildCandidate() でこれを見てPosIndexをスキップする
-					'pos'       => $entry['pos'],
-					'subpos'    => $entry['subpos'],
-					'pos_label' => $entry['pos'] . '-' . $entry['subpos'],
-				];
-			}
-		}
-		return $result;
-	}
-
 	/**
 	 * applyEarlyModes() も reading を正規化してから比較する
 	 * MODE_NO_CONVERT / MODE_REPLACE の全体完全一致のみ処理する

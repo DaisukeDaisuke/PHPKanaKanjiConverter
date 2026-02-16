@@ -22,13 +22,14 @@ $dict->addAll([
 	['reading' => 'eremenntox', 'surface' => 'ElementX',  'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000, 'pos' => "名詞"],
 	// 「sod」→ 「そd」 → d が残るため reading は「そ」にするか入力を「sodo」等にする
 	['reading' => 'sod',       'surface' => 'SOD SERVER', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000, 'pos' => "名詞"],
+	['reading' => 'test',       'surface' => 'てすと', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000, 'pos' => "名詞"],
 ]);
 
 $converter->registerUserDict('main', $dict);
 
 $time = microtime(true);
 
-foreach(["sod"] as $input){
+foreach(["sod", "eremenntox", "test", "aisusuki"] as $input){
 	$result = $converter->convert($input);
 
 	//var_dump($result);
