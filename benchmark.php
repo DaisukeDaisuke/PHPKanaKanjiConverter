@@ -49,8 +49,6 @@ $testWords = [
 	"kinoutabeta",
 	"suuzinotesuto1234567890tesuto",
 	"daare",
-	"kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara",
-	"kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara,kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara,kokohadoko,watasihadaaremuzinnnoekideanatahanaku,muzinnzounihakidasaretahosiwonagamenagara"
 ];
 
 /* =========================

@@ -12,25 +12,28 @@ $basemem1 = memory_get_peak_usage();
 $converter = new PHPKanaKanjiConverter();
 
 // --- ユーザー辞書の構築 ---
+// --- ユーザー辞書の構築 ---
 $dict = new UserDictionary();
 $dict->addAll([
 	// 漢字変換フェーズでマージ（コスト優先で「誰」が選ばれやすくなる）
-	['reading' => 'だあれ', 'surface' => 'だあれ', 'mode' => UserDictionary::MODE_REPLACE, 'word_cost' => -6000],
+	['reading' => 'だあれ', 'surface' => 'だあれ', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -6000],
 
 	// サーバー側辞書エントリ
-	['reading' => 'せrゔぇr', 'surface' => 'サーバー', 'mode' => UserDictionary::MODE_REPLACE, 'word_cost' => -5000],
+	['reading' => 'せrゔぇr', 'surface' => 'サーバー', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000],
+	['reading' => 'せRゔぇR', 'surface' => 'サーバー', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000],
+	['reading' => 'いめ', 'surface' => 'IME', 'mode' => UserDictionary::MODE_SERVER, 'word_cost' => -5000],
 ]);
-
 $converter->registerUserDict('main', $dict);
 
 $time = microtime(true);
 
-foreach(["server"] as $input){
+foreach(["SERVERsuki"] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["best"]["text"]);
+	var_dump($result["kana"]);
 
-	if(preg_match('/[A-Za-z]/u', $result["kana"])){
+	if(preg_match('/[A-Za-z]/u', $result["best"]["text"])){
 		echo $result["original"], "\n";
 		continue;
 	}

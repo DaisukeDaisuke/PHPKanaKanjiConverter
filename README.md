@@ -73,7 +73,7 @@ $converter = new PHPKanaKanjiConverter();
 foreach(["server", "konn", "sinnkannsenn", "converterですか"] as $input){
 	$result = $converter->convert($input);
 
-	if(preg_match('/[A-Za-z]/u', $result["kana"])){
+	if(preg_match('/[A-Za-z]/u', $result["best"]["text"])){
 		echo $result["original"], "\n";
 		continue;
 	}
