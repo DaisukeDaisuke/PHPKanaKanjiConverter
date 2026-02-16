@@ -142,7 +142,7 @@ final class PHPKanaKanjiConverter
 		}
 
 		$lower    = mb_strtolower($input, 'UTF-8');
-		$totalLen = strlen($lower); // rulesはASCIIなのでバイト長で統一
+		$totalLen = strlen($lower);
 		$result   = '';
 		$offset   = 0;
 
@@ -163,32 +163,20 @@ final class PHPKanaKanjiConverter
 			}
 
 			// bestPos で長い順にマッチを試す（rulesは長い順ソート済み）
+			// ※ 競合覚悟モード: 末尾子音+直後英字チェックを行わず最長一致で即採用
 			$matchedRule  = null;
 			$matchedAfter = 0;
 			foreach ($rules as $rule) {
-				// この位置でマッチするか
 				if (strpos($lower, $rule['lower'], $bestPos) !== $bestPos) {
 					continue;
 				}
-				$afterPos  = $bestPos + strlen($rule['lower']);
-				$nextChar  = ($afterPos < $totalLen) ? $lower[$afterPos] : '';
-				$lastChar  = $rule['lower'][-1];
-
-				// 衝突回避: 末尾子音 かつ 直後も英字 → スキップ
-				if (
-					strpos('bcdfghjklmnpqrstvwxyz', $lastChar) !== false
-					&& $nextChar >= 'a' && $nextChar <= 'z'
-				) {
-					continue;
-				}
-
 				$matchedRule  = $rule;
-				$matchedAfter = $afterPos;
+				$matchedAfter = $bestPos + strlen($rule['lower']);
 				break;
 			}
 
 			if ($matchedRule === null) {
-				// bestPos で全ルールが衝突 → 1バイト進めて再探索
+				// この位置にマッチするルールが一切なかった → 1バイト進めて再探索
 				$result .= $this->romaji->toHiragana(
 					substr($input, $offset, $bestPos - $offset + 1),
 					$removeIllegalFlag
@@ -260,12 +248,6 @@ final class PHPKanaKanjiConverter
 				$normalizedReading = $this->normalizeReading($entry['reading']);
 				if ($normalizedReading !== $kana) {
 					continue;
-				}
-				if ($entry['mode'] === UserDictionary::MODE_NO_CONVERT) {
-					return $this->buildSingleTokenResult($kana, $kana, $entry);
-				}
-				if ($entry['mode'] === UserDictionary::MODE_REPLACE) {
-					return $this->buildSingleTokenResult($entry['surface'], $kana, $entry);
 				}
 			}
 		}
