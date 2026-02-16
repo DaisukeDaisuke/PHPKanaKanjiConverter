@@ -27,7 +27,7 @@ $converter->registerUserDict('main', $dict);
 
 $time = microtime(true);
 
-foreach(['この100もんのてすとは、へんかをみるためのきほんけんとしてつかってください。'] as $input){
+foreach(['さよならをいったあと、みんなでてをふりました。', 'こうじをおこなうべきだ'] as $input){
 	$result = $converter->convert($input);
 
 	var_dump($result["best"]["tokens"]);
@@ -39,10 +39,10 @@ foreach(['この100もんのてすとは、へんかをみるためのきほん�
 //		echo "kana: ".$result["kana"], "\n";
 //		continue;
 //	}
-
-	foreach($result["candidates"] as $candidate){
-		var_dump($candidate["text"]);
-	}
+//
+//	foreach($result["candidates"] as $candidate){
+//		var_dump($candidate["text"], $candidate["tokens"]);
+//	}
 
 	echo "no-maru:". $result["best"]["text"], "\n";
 }
