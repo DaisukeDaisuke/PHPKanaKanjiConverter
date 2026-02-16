@@ -1,5 +1,4 @@
 <?php
-// PHPKanaKanjiConverter.php
 
 declare(strict_types=1);
 
@@ -10,13 +9,12 @@ final class PHPKanaKanjiConverter
 	private ConvertibleRomaji $romaji;
 	private KanaKanjiConverter $kannziconverter;
 
-	/** @var array<string, UserDictionary>  name => 辞書インスタンス */
+	/** @var UserDictionary[] キー: 任意の識別子 */
 	private array $userDicts = [];
 
 	public function __construct()
 	{
 		$this->romaji = new ConvertibleRomaji();
-
 		$dictDir = realpath(__DIR__ . '/dictionary_oss') ?: (__DIR__ . '/dictionary_oss');
 		$this->kannziconverter = new KanaKanjiConverter($dictDir);
 	}
@@ -25,31 +23,9 @@ final class PHPKanaKanjiConverter
 	// ユーザー辞書管理
 	// ----------------------------------------------------------------
 
-	/**
-	 * ユーザー辞書を登録する（重複名は上書き）
-	 */
 	public function registerUserDict(string $name, UserDictionary $dict): void
 	{
 		$this->userDicts[$name] = $dict;
-	}
-
-	/**
-	 * 複数のユーザー辞書を MODE_MERGE で統合して登録する
-	 *
-	 * @param string $name          統合後の辞書名
-	 * @param string ...$dictNames  統合する既登録辞書名
-	 */
-	public function mergeDicts(string $name, string ...$dictNames): void
-	{
-		$targets = [];
-		foreach ($dictNames as $dn) {
-			if (isset($this->userDicts[$dn])) {
-				$targets[] = $this->userDicts[$dn];
-			}
-		}
-		if ($targets !== []) {
-			$this->userDicts[$name] = UserDictionary::merge(...$targets);
-		}
 	}
 
 	public function getUserDict(string $name): ?UserDictionary
@@ -67,41 +43,49 @@ final class PHPKanaKanjiConverter
 	// ----------------------------------------------------------------
 
 	/**
-	 * @return array{
-	 *   original: string,
-	 *   kana: string,
-	 *   best: array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>},
-	 *   candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>}>
-	 * }
+	 * @return array{original: string, kana: string, best: array, candidates: list<array>}
 	 */
 	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3): array
 	{
-		// Step1: ローマ字 → かな
-		//   MODE_KANA_ALT の独自ルール + MODE_KANA の reading を認識した上で変換
-		$kana = $this->romajiToKana($input, $removeIllegalFlag);
+		// Step1: ローマ字→かな
+		$kana = $this->applyKanaMode($input, $removeIllegalFlag);
 
-		// Step2: かな全体一致チェック（MODE_NO_CONVERT / MODE_REPLACE）
+		// Step2: MODE_NO_CONVERT / MODE_REPLACE の全体一致チェック
+		//        （MODE_SERVER / MODE_MERGE はここでは処理しない）
 		$earlyResult = $this->applyEarlyModes($kana);
 		if ($earlyResult !== null) {
 			return $earlyResult + ['original' => $input, 'kana' => $kana];
 		}
 
-		// Step3: 漢字変換フェーズ用ユーザーエントリを収集
-		//   MODE_KANA:   ローマ字→かな と漢字変換の両フェーズで使う → 漢字変換にも注入
-		//   MODE_MERGE:  複数辞書統合済みのエントリ → 内蔵辞書にマージ
-		//   MODE_SERVER: サーバー側辞書エントリ    → 内蔵辞書にマージ
-		$userEntries = $this->collectConverterEntries([
-			UserDictionary::MODE_KANA,
-			UserDictionary::MODE_MERGE,
-			UserDictionary::MODE_SERVER,
-		]);
+		// Step3: 漢字変換 --- ユーザーエントリをマージ ---
+		// MODE_KANA_ALT / MODE_MERGE / MODE_SERVER をまとめて収集
+		$altEntries    = $this->collectEntries(UserDictionary::MODE_KANA_ALT);
+		$mergeEntries  = $this->collectEntries(UserDictionary::MODE_MERGE);
+		$serverEntries = $this->collectEntries(UserDictionary::MODE_SERVER);
 
-		$result = $this->kannziconverter->convertWithUserEntries(
-			$kana,
-			$userEntries,
-			true,   // 内蔵辞書も使う
-			$numofbest
-		);
+		$hasUserEntries = ($altEntries !== [] || $mergeEntries !== [] || $serverEntries !== []);
+
+		if ($altEntries !== []) {
+			// KANA_ALT: ユーザー辞書のみで変換
+			$result = $this->kannziconverter->convertWithUserEntries(
+				$kana,
+				$altEntries,
+				false,
+				$numofbest
+			);
+		} elseif ($hasUserEntries) {
+			// MERGE / SERVER: 内蔵辞書 + ユーザー辞書でマージ変換
+			$userEntries = array_merge($mergeEntries, $serverEntries);
+			$result = $this->kannziconverter->convertWithUserEntries(
+				$kana,
+				$userEntries,
+				true,
+				$numofbest
+			);
+		} else {
+			// ユーザー辞書なし: 通常変換
+			$result = $this->kannziconverter->convert($kana, $numofbest);
+		}
 
 		$result['original'] = $input;
 		$result['kana']     = $kana;
@@ -109,7 +93,7 @@ final class PHPKanaKanjiConverter
 	}
 
 	// ----------------------------------------------------------------
-	// 既存メソッド（変更なし・維持）
+	// 既存メソッドはそのまま維持
 	// ----------------------------------------------------------------
 
 	public function isValid(array $result): bool
@@ -156,94 +140,30 @@ final class PHPKanaKanjiConverter
 	// 内部ヘルパー
 	// ----------------------------------------------------------------
 
-	/**
-	 * ローマ字→かな変換
-	 *
-	 * 1. MODE_KANA_ALT のルールを ConvertibleRomaji に一時的に注入
-	 *    （例: 'server' => 'サーバー' のような独自かな変換）
-	 * 2. MODE_KANA の reading もローマ字として認識させる
-	 *    （ConvertibleRomaji に addCustomRule() があれば）
-	 */
-	private function romajiToKana(string $input, bool $removeIllegalFlag): string
+	private function applyKanaMode(string $input, bool $removeIllegalFlag): string
 	{
-		$hasCustomRule = method_exists($this->romaji, 'addCustomRule');
-		$hasClear      = method_exists($this->romaji, 'clearCustomRules');
+		$entries = $this->collectEntries(UserDictionary::MODE_KANA);
 
-		if ($hasCustomRule) {
-			// MODE_KANA_ALT: 独自ローマ字→かなルール
-			foreach ($this->userDicts as $dict) {
-				foreach ($dict->getKanaAltRules() as $romaji => $kana) {
-					$this->romaji->addCustomRule($romaji, $kana);
-				}
-			}
-
-			// MODE_KANA: reading（かな）をローマ字として認識させる
-			// ※ reading がローマ字の場合のみ意味を持つ
-			foreach ($this->userDicts as $dict) {
-				foreach ($dict->getByMode(UserDictionary::MODE_KANA) as $entry) {
-					// surface（漢字など）への直接マッピングではなく
-					// reading（かな）を出力として使う
-					$this->romaji->addCustomRule($entry['reading'], $entry['reading']);
-				}
-			}
+		if ($entries === []) {
+			return $this->romaji->toHiragana($input, $removeIllegalFlag);
 		}
 
-		$result = $this->romaji->toHiragana($input, $removeIllegalFlag);
-
-		if ($hasCustomRule && $hasClear) {
-			$this->romaji->clearCustomRules();
+		if (method_exists($this->romaji, 'addCustomRule')) {
+			foreach ($entries as $reading => $entryList) {
+				foreach ($entryList as $e) {
+					$this->romaji->addCustomRule($reading, $e['surface']);
+				}
+			}
+			$result = $this->romaji->toHiragana($input, $removeIllegalFlag);
+			if (method_exists($this->romaji, 'clearCustomRules')) {
+				$this->romaji->clearCustomRules();
+			}
+			return $result;
 		}
 
-		return $result;
+		return $this->romaji->toHiragana($input, $removeIllegalFlag);
 	}
 
-	/**
-	 * MODE_NO_CONVERT / MODE_REPLACE の全体一致チェック
-	 * → かな文字列全体が reading に完全一致する場合に早期リターン
-	 *
-	 * @return array<string,mixed>|null
-	 */
-	private function applyEarlyModes(string $kana): ?array
-	{
-		foreach ($this->userDicts as $dict) {
-			foreach ($dict->findByReading($kana) as $entry) {
-				if ($entry['mode'] === UserDictionary::MODE_NO_CONVERT) {
-					return $this->buildSingleTokenResult($kana, $kana, $entry);
-				}
-				if ($entry['mode'] === UserDictionary::MODE_REPLACE) {
-					return $this->buildSingleTokenResult($entry['surface'], $kana, $entry);
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * 指定モードのエントリを全辞書から収集し
-	 * KanaKanjiConverter::convertWithUserEntries() が期待する形式に変換する
-	 *
-	 * @param int[] $modes
-	 * @return array<string, list<array<string,mixed>>>  読み => [エントリ配列]
-	 */
-	private function collectConverterEntries(array $modes): array
-	{
-		$result = [];
-		foreach ($this->userDicts as $dict) {
-			foreach ($dict->getConverterEntries($modes) as $reading => $entries) {
-				foreach ($entries as $e) {
-					$result[$reading][] = $e;
-				}
-			}
-		}
-		return $result;
-	}
-
-	/**
-	 * 単一トークンの result 配列を組み立てる
-	 *
-	 * @param array<string,mixed> $entry
-	 * @return array<string,mixed>
-	 */
 	private function buildSingleTokenResult(string $surface, string $reading, array $entry): array
 	{
 		$token = [
@@ -260,5 +180,84 @@ final class PHPKanaKanjiConverter
 			'best'       => $candidate,
 			'candidates' => [$candidate],
 		];
+	}
+
+	/**
+	 * 指定モードのエントリを全辞書から収集し
+	 * reading をひらがなに正規化した上で KanaKanjiConverter が期待する形式に変換する
+	 *
+	 * @return array<string, list<array>>
+	 */
+	private function collectEntries(int $mode): array
+	{
+		$result = [];
+		foreach ($this->userDicts as $dict) {
+			foreach ($dict->getByMode($mode) as $entry) {
+				$reading = $this->normalizeReading($entry['reading']);
+				if ($reading === '') {
+					continue;
+				}
+				$result[$reading][] = [
+					'surface'   => $entry['surface'],
+					'left_id'   => $entry['left_id'],
+					'right_id'  => $entry['right_id'],
+					'word_cost' => $entry['word_cost'],
+					// pos/subpos をノードに直接埋め込む
+					// buildCandidate() でこれを見てPosIndexをスキップする
+					'pos'       => $entry['pos'],
+					'subpos'    => $entry['subpos'],
+					'pos_label' => $entry['pos'] . '-' . $entry['subpos'],
+				];
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * applyEarlyModes() も reading を正規化してから比較する
+	 * MODE_NO_CONVERT / MODE_REPLACE の全体完全一致のみ処理する
+	 */
+	private function applyEarlyModes(string $kana): ?array
+	{
+		foreach ($this->userDicts as $dict) {
+			// getAll() で全エントリを走査し、読み正規化して比較
+			foreach ($dict->getAll() as $entry) {
+				if (!in_array($entry['mode'], [
+					UserDictionary::MODE_NO_CONVERT,
+					UserDictionary::MODE_REPLACE,
+				], true)) {
+					continue;
+				}
+				$normalizedReading = $this->normalizeReading($entry['reading']);
+				if ($normalizedReading !== $kana) {
+					continue;
+				}
+				if ($entry['mode'] === UserDictionary::MODE_NO_CONVERT) {
+					return $this->buildSingleTokenResult($kana, $kana, $entry);
+				}
+				if ($entry['mode'] === UserDictionary::MODE_REPLACE) {
+					return $this->buildSingleTokenResult($entry['surface'], $kana, $entry);
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * reading をひらがなに正規化する
+	 *
+	 * - すでにひらがな/カタカナ/漢字混じりならそのまま返す
+	 * - ASCII を含む場合は toHiragana() を通す（removeIllegalFlag=true で英字残滓を除去）
+	 * - 空文字になった場合は元の値を返す（登録ミス防止）
+	 */
+	private function normalizeReading(string $reading): string
+	{
+		// ASCII 文字が含まれていれば toHiragana() で変換
+		if (preg_match('/[A-Za-z]/u', $reading)) {
+			$converted = $this->romaji->toHiragana($reading, false);
+			// 変換結果が空でなければ採用
+			return $converted !== '' ? $converted : $reading;
+		}
+		return $reading;
 	}
 }
