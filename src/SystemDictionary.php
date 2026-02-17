@@ -386,6 +386,19 @@ final class SystemDictionary{
 				'right_id'  => 828,
 			],
 
+			// 4. 「が逝った」を優遇
+			[
+				'reading'   => 'がいった',
+				'surface'   => 'が逝った',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => -250,  // 元の0よりさらに低く、行っ(43)より大幅に低く
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 828,   // 動詞,自立,*,*,五段・ワ行促音便,連用タ接続
+				'right_id'  => 828,
+			],
+
 			// 5. 「川」を優遇
 			[
 				'reading'   => 'かわ',
