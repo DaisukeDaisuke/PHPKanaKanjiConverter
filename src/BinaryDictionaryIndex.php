@@ -70,14 +70,18 @@ final class BinaryDictionaryIndex
 	 */
 	public function search(string $hiragana): array
 	{
-		$result  = [];
-		$checked = [];
+		$result     = [];
+		$checked    = [];
 		$mbCharsAll = mb_str_split($hiragana, 1, 'UTF-8');
 		$totalChars = count($mbCharsAll);
 
+		// 辞書の実態上、読みが15文字を超える単語はほぼ存在しない
+		$maxLen = min($totalChars, 15);
+
 		for ($startPos = 0; $startPos < $totalChars; $startPos++) {
 			$partial = '';
-			for ($endPos = $startPos; $endPos < $totalChars; $endPos++) {
+			$limit   = min($startPos + $maxLen, $totalChars);
+			for ($endPos = $startPos; $endPos < $limit; $endPos++) {
 				$partial .= $mbCharsAll[$endPos];
 
 				if (isset($checked[$partial])) {
@@ -123,10 +127,11 @@ final class BinaryDictionaryIndex
 
 		$entries = [];
 		for ($i = $first; $i < $this->recordCount; $i++) {
-			if ($this->readReading($i) !== $reading) {
-				break;
+			// readReading と fetchEntry で同じレコードを2度読まないよう統合
+			$entry = $this->fetchEntryWithReading($i, $reading);
+			if ($entry === false) {
+				break; // reading が変わった
 			}
-			$entry = $this->fetchEntry($i, $reading);
 			if ($entry !== null) {
 				$entries[] = $entry;
 			}
@@ -136,53 +141,56 @@ final class BinaryDictionaryIndex
 	}
 
 	/**
-	 * インデックスのi番目レコードからreading文字列を読む
-	 * BinaryStream のオフセットを直接操作
+	 * reading確認 + エントリ取得を1回のオフセット操作で行う
+	 * @return array|null|false  false=readingが一致しない（ループ終了）
 	 */
-	private function readReading(int $i): string
+	private function fetchEntryWithReading(int $i, string $expected): array|null|false
 	{
 		$pos = self::HEADER_SIZE + $i * self::RECORD_SIZE;
 		$this->idxStream->setOffset($pos);
 
-		$strOffset = $this->idxStream->getLInt();   // 4byte
-		$strLen    = $this->idxStream->getLShort();  // 2byte
-
-		$this->strStream->setOffset($strOffset);
-		return $this->strStream->get($strLen);
-	}
-
-	/**
-	 * インデックスのi番目レコードからエントリ本体を取得
-	 */
-	private function fetchEntry(int $i, string $reading): ?array
-	{
-		$pos = self::HEADER_SIZE + $i * self::RECORD_SIZE;
-		$this->idxStream->setOffset($pos);
-
-		$this->idxStream->getLInt();    // str_offset（読み飛ばし）
-		$this->idxStream->getLShort();  // str_len（読み飛ばし）
+		$strOffset  = $this->idxStream->getLInt();   // 4byte
+		$strLen     = $this->idxStream->getLShort(); // 2byte
 		$fileId     = $this->idxStream->getByte();   // 1byte
 		$lineOffset = $this->idxStream->getLInt();   // 4byte
+
+		// reading確認（setOffset 1回で済む）
+		$this->strStream->setOffset($strOffset);
+		$actualReading = $this->strStream->get($strLen);
+		if ($actualReading !== $expected) {
+			return false;
+		}
 
 		$stream = $this->dictStreams[$fileId] ?? null;
 		if ($stream === null) {
 			return null;
 		}
 
-		// 指定オフセットから1行読む
-		$stream->setOffset($lineOffset);
-		$line = '';
-		while (!$stream->feof()) {
-			$c = $stream->get(1);
-			if ($c === "\n") {
-				break;
-			}
-			$line .= $c;
-		}
+		// 行読み込みを strpos+substr で一発処理
+		$buf      = $stream->getBuffer();
+		$nlPos    = strpos($buf, "\n", $lineOffset);
+		$line     = $nlPos !== false
+			? substr($buf, $lineOffset, $nlPos - $lineOffset)
+			: substr($buf, $lineOffset);
+		$line     = rtrim($line, "\r");
 
-		return $this->parseLine(rtrim($line, "\r"), $reading);
+		return $this->parseLine($line, $expected);
 	}
 
+	/**
+	 * インデックスのi番目レコードからreading文字列を読む（バイナリサーチ用）
+	 */
+	private function readReading(int $i): string
+	{
+		$pos = self::HEADER_SIZE + $i * self::RECORD_SIZE;
+		$this->idxStream->setOffset($pos);
+
+		$strOffset = $this->idxStream->getLInt();
+		$strLen    = $this->idxStream->getLShort();
+
+		$this->strStream->setOffset($strOffset);
+		return $this->strStream->get($strLen);
+	}
 	private function parseLine(string $line, string $reading): ?array
 	{
 		$parts = explode("\t", $line, 5);

@@ -33,6 +33,7 @@ $dict->addAll([
 
 $converter->registerUserDict('server', $dict);
 
+$converter->setTimeout(100 * 0.001);
 
 $time = microtime(true);
 

@@ -28,9 +28,11 @@ final class KanaKanjiConverter
 	/**
 	 * $hiragana: 変換対象のひらがな文字列（UTF-8）
 	 * $nbest: 取得する候補数
+	 * @throws KanjiConverterTimeoutException
 	 */
 	public function convert(string $hiragana, int $nbest = 1): array
 	{
+		$this->startTimer();
 		$nbest = max(1, min($nbest, 100)); // 上限は適宜調整可能
 
 		$entriesByReading = $this->collectEntriesFromDictionaries($hiragana);
@@ -197,92 +199,113 @@ final class KanaKanjiConverter
 
 	private function forwardDp(array $lattice): array
 	{
-		$nodes = $lattice['nodes'];
+		$nodes        = $lattice['nodes'];
 		$nodesByStart = $lattice['nodesByStart'];
-		$nodesByEnd = $lattice['nodesByEnd'];
-		$len = $lattice['len'];
-		$bos = $lattice['bos'];
-		$eos = $lattice['eos'];
+		$nodesByEnd   = $lattice['nodesByEnd'];
+		$len          = $lattice['len'];
+		$bos          = $lattice['bos'];
+		$eos          = $lattice['eos'];
 
-		$count = count($nodes);
-		$costs = array_fill(0, $count, self::INF);
-		$prev = array_fill(0, $count, -1);
-		$prevPrev = array_fill(0, $count, -1);  // 前々ノードIDを追加
+		$count    = count($nodes);
+		$costs    = array_fill(0, $count, self::INF);
+		$prev     = array_fill(0, $count, -1);
+		$prevPrev = array_fill(0, $count, -1);
 		$costs[$bos] = 0;
 
+		// right_id → posLabel のキャッシュ（同じIDを何度もgetPosしない）
+		$posIndex     = $this->getPosIndex();
+		$labelCache   = [];
+		$labelOf = static function(int $id) use ($posIndex, &$labelCache): string {
+			if ($id === 0) return 'BOS';
+			return $labelCache[$id] ??= $posIndex->getPos($id)['label'];
+		};
+
+		// (rightId, leftId) → connectionCost のキャッシュ
+		$connCache  = [];
+		$connBinary = $this->getConnectionBinary();
+		$getConn = function(int $r, int $l) use ($connBinary, $posIndex, &$connCache): int {
+			$key = ($r << 16) | $l;
+			if (!isset($connCache[$key])) {
+				$base       = $connBinary->getCost($r, $l);
+				$adjustment = $posIndex->getChainAdjustment($r, $l);
+				$connCache[$key] = $base + $adjustment;
+			}
+			return $connCache[$key];
+		};
+
+		// (label1, label2, label3) → tripletAdj のキャッシュ
+		$tripletCache = [];
+		$quadCache    = [];
+
 		for ($pos = 0; $pos <= $len; $pos++) {
+			if ($this->timeout !== null) $this->checkTimeout(); // ← 追加（nullチェックでホットループ回避）
+
 			$prevNodes = $nodesByEnd[$pos];
 			$nextNodes = $nodesByStart[$pos];
 
 			foreach ($prevNodes as $prevId) {
-				if ($costs[$prevId] === self::INF) {
-					continue;
-				}
-				if ($prevId === $eos) {
-					continue;
-				}
+				if ($costs[$prevId] === self::INF) continue;
+				if ($prevId === $eos) continue;
+
+				$prevCost    = $costs[$prevId];
+				$prevRightId = $nodes[$prevId]['right_id'];
+				$prevPrevId  = $prev[$prevId];
 
 				foreach ($nextNodes as $nextId) {
-					if ($nextId === $bos) {
-						continue;
-					}
-					if ($nextId === $eos && $pos !== $len) {
-						continue;
-					}
-					if ($prevId === $bos && $nextId === $eos && $len > 0) {
-						continue;
-					}
+					if ($nextId === $bos) continue;
+					if ($nextId === $eos && $pos !== $len) continue;
+					if ($prevId === $bos && $nextId === $eos && $len > 0) continue;
 
-					// 基本的な接続コスト（2連）
-					$edgeCost = $this->getConnectionCost($nodes[$prevId]['right_id'], $nodes[$nextId]['left_id']);
+					$nextLeftId = $nodes[$nextId]['left_id'];
 
-					// 3連チェック
+					$edgeCost = $getConn($prevRightId, $nextLeftId);
+
+					// 3連キャッシュ
 					$tripletAdj = 0;
-					if ($prev[$prevId] !== -1) {
-						$prevPrevId = $prev[$prevId];
-						$tripletAdj = $this->getPosIndex()->getTripletAdjustment(
-							$nodes[$prevPrevId]['right_id'],
-							$nodes[$prevId]['right_id'],
-							$nodes[$nextId]['left_id']
-						);
+					if ($prevPrevId !== -1) {
+						$k = $nodes[$prevPrevId]['right_id'] . ',' . $prevRightId . ',' . $nextLeftId;
+						if (!isset($tripletCache[$k])) {
+							$tripletCache[$k] = $posIndex->getTripletAdjustment(
+								$nodes[$prevPrevId]['right_id'],
+								$prevRightId,
+								$nextLeftId
+							);
+						}
+						$tripletAdj = $tripletCache[$k];
 					}
 
-					// 4連チェック
+					// 4連キャッシュ
 					$quadrupletAdj = 0;
-					if ($prev[$prevId] !== -1 && $prevPrev[$prevId] !== -1) {
-						$prevPrevId = $prev[$prevId];
+					if ($prevPrevId !== -1 && $prevPrev[$prevId] !== -1) {
 						$prevPrevPrevId = $prevPrev[$prevId];
-						$quadrupletAdj = $this->getPosIndex()->getQuadrupletAdjustment(
-							$nodes[$prevPrevPrevId]['right_id'],
-							$nodes[$prevPrevId]['right_id'],
-							$nodes[$prevId]['right_id'],
-							$nodes[$nextId]['left_id']
-						);
+						$k = $nodes[$prevPrevPrevId]['right_id'] . ',' . $nodes[$prevPrevId]['right_id'] . ',' . $prevRightId . ',' . $nextLeftId;
+						if (!isset($quadCache[$k])) {
+							$quadCache[$k] = $posIndex->getQuadrupletAdjustment(
+								$nodes[$prevPrevPrevId]['right_id'],
+								$nodes[$prevPrevId]['right_id'],
+								$prevRightId,
+								$nextLeftId
+							);
+						}
+						$quadrupletAdj = $quadCache[$k];
 					}
 
-					$cost = $costs[$prevId] + $edgeCost + $nodes[$nextId]['cost'] + $tripletAdj + $quadrupletAdj;
+					$cost = $prevCost + $edgeCost + $nodes[$nextId]['cost'] + $tripletAdj + $quadrupletAdj;
 
-					if (
-						$nodes[$prevId]['left_id'] === 0 &&
-						$nodes[$nextId]['left_id'] === 0
-					) {
-						$cost += 8000; // 連続未知語ペナルティ
+					if ($nodes[$prevId]['left_id'] === 0 && $nextLeftId === 0) {
+						$cost += 8000;
 					}
 
 					if ($cost < $costs[$nextId]) {
 						$costs[$nextId] = $cost;
-						$prev[$nextId] = $prevId;
-						$prevPrev[$nextId] = $prev[$prevId];  // 前々ノードを記録
+						$prev[$nextId]     = $prevId;
+						$prevPrev[$nextId] = $prevPrevId;
 					}
 				}
 			}
 		}
 
-		return [
-			'costs' => $costs,
-			'prev' => $prev,
-			'prevPrev' => $prevPrev,  // 追加
-		];
+		return ['costs' => $costs, 'prev' => $prev, 'prevPrev' => $prevPrev];
 	}
 
 	private function backwardAStar(array $lattice, array $bestCosts, array $prevArray, array $prevPrevArray, int $nbest): array
@@ -348,7 +371,6 @@ final class KanaKanjiConverter
 
 		return $results;
 	}
-
 // プロパティ追加
 	private ?PosIndex $posIndex = null;
 
@@ -458,6 +480,8 @@ final class KanaKanjiConverter
 	 * @param array<string, list<array>> $userEntries    読み => [エントリ配列] 形式
 	 * @param bool                       $useBuiltinDict 内蔵辞書を使うか
 	 * @param int                        $nbest          候補数
+	 *
+	 * @throws KanjiConverterTimeoutException
 	 */
 	public function convertWithUserEntries(
 		string $hiragana,
@@ -465,6 +489,7 @@ final class KanaKanjiConverter
 		bool   $useBuiltinDict,
 		int    $nbest = 1
 	): array {
+		$this->startTimer();
 		$nbest = max(1, min($nbest, 100));
 
 		if ($useBuiltinDict) {
@@ -516,5 +541,31 @@ final class KanaKanjiConverter
 			array_unshift($merged[$reading], ...$entries);
 		}
 		return $merged;
+	}
+
+	private ?float $timeout = null;       // タイムアウト秒数（nullで無効）
+	private float  $startTime = 0.0;
+
+	public function setTimeout(?float $seconds): void
+	{
+		$this->timeout = $seconds;
+	}
+
+	private function startTimer(): void
+	{
+		if ($this->timeout !== null) {
+			$this->startTime = microtime(true);
+		}
+	}
+
+	/** @throws KanjiConverterTimeoutException */
+	private function checkTimeout(): void
+	{
+		// $this->timeout が null のときはこのメソッド自体呼ばない運用
+		if (microtime(true) - $this->startTime >= $this->timeout) {
+			throw new KanjiConverterTimeoutException(
+				"変換がタイムアウトしました（{$this->timeout}秒）"
+			);
+		}
 	}
 }

@@ -49,8 +49,9 @@ final class PHPKanaKanjiConverter
 	/**
 	 * phpstormなどの補完で有益なため消さないこと
 	 * @return array{original: string, kana: string, best: array{text: string, cost: int,tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>}, candidates: list<array{text: string, cost: int, tokens: list<array{surface: string, reading: string, word_cost: int, penalty: int, pos: string, subpos: string, pos_label: string}>>}}
+	 * @throws KanjiConverterTimeoutException
 	 */
-	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 3): array
+	public function convert(string $input, bool $removeIllegalFlag = false, int $numofbest = 1): array
 	{
 		// Step1: ローマ字→かな
 		$kana = $this->applyKanaMode($input, $removeIllegalFlag);
@@ -298,5 +299,9 @@ final class PHPKanaKanjiConverter
 
 		usort($rules, static fn($a, $b) => $b['len'] <=> $a['len']);
 		return $rules;
+	}
+
+	public function setTimeout(float $seconds){
+		$this->kannziconverter->setTimeout($seconds);
 	}
 }
