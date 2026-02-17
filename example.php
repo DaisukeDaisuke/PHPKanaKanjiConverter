@@ -37,7 +37,7 @@ $converter->registerUserDict('server', $dict);
 $time = microtime(true);
 
 //English is not supported
-foreach(["さんびきのねこ"] as $input){
+foreach(["ちゅうもくすべきてんについてていねいにてんぶんをつけてください。"] as $input){
 	$result = $converter->convert($input);
 
 
@@ -49,6 +49,10 @@ foreach(["さんびきのねこ"] as $input){
 		echo "kana: ".$result["kana"], "\n";
 		continue;
 	}
+//
+//	foreach($result["candidates"] as $candidate){
+//		var_dump($candidate["tokens"], $candidate["text"]);
+//	}
 
 	echo "no-maru:". $result["best"]["text"], "\n";
 	//var_dump($result["best"]["tokens"]);
