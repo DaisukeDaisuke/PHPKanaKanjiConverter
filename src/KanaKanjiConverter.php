@@ -29,36 +29,83 @@ final class KanaKanjiConverter
 	 * $hiragana: 変換対象のひらがな文字列（UTF-8）
 	 * $nbest: 取得する候補数
 	 */
+// convert() / convertWithUserEntries() を修正
+// nbest=1 のとき backwardAStar を呼ばずに prev バックトレースのみ
+
 	public function convert(string $hiragana, int $nbest = 1): array
 	{
-		$nbest = max(1, min($nbest, 100)); // 上限は適宜調整可能
-
+		$nbest = max(1, min($nbest, 100));
 		$entriesByReading = $this->collectEntriesFromDictionaries($hiragana);
-
 		$lattice = $this->buildLattice($hiragana, $entriesByReading);
 		$this->loadConnectionCosts();
-
 		$forward = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
 
-		$best = $candidates[0] ?? [
-			'text' => $hiragana,
-			'tokens' => [
-				[
-					'surface' => $hiragana,
-					'reading' => $hiragana,
-					'word_cost' => 0,
-					'penalty' => 0,
-				],
-			],
+		// ★ nbest=1 のときは A* を完全スキップ
+		$best = $this->backtrackBest($lattice, $forward['costs'], $forward['prev']);
+
+		if ($best === null) {
+			$best = $this->makeUnknownCandidate($hiragana);
+		}
+
+		$candidates = [$best];
+
+		// ★ 2候補目以降はオプション呼び出し
+		if ($nbest > 1) {
+			$candidates = $this->backwardAStar(
+				$lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest
+			);
+			if (empty($candidates)) {
+				$candidates = [$best];
+			}
+		}
+
+		return ['best' => $best, 'candidates' => $candidates];
+	}
+
+// ★ 新規追加：prev をただ辿るだけ O(n)
+	private function backtrackBest(array $lattice, array $costs, array $prev): ?array
+	{
+		$eos = $lattice['eos'];
+		$bos = $lattice['bos'];
+		$nodes = $lattice['nodes'];
+
+		if ($costs[$eos] >= self::INF) {
+			return null;
+		}
+
+		$path = [];
+		$id = $eos;
+		while ($id !== -1) {
+			$path[] = $id;
+			if ($id === $bos) break;
+			$id = $prev[$id];
+		}
+
+		// bos に到達できなかった場合
+		if (end($path) !== $bos) {
+			return null;
+		}
+
+		return $this->buildCandidate($path, $nodes, $costs[$eos]);
+	}
+
+	private function makeUnknownCandidate(string $hiragana): array
+	{
+		return [
+			'text'   => $hiragana,
+			'tokens' => [[
+				'surface'   => $hiragana,
+				'reading'   => $hiragana,
+				'word_cost' => 0,
+				'penalty'   => 0,
+				'pos'       => '',
+				'subpos'    => '',
+				'pos_label' => '',
+			]],
 			'cost' => 0,
 		];
-
-		return [
-			'best' => $best,
-			'candidates' => $candidates,
-		];
 	}
+
 	private ?BinaryDictionaryIndex $binaryIndex = null;
 
 	private function getBinaryIndex(): BinaryDictionaryIndex
@@ -476,23 +523,39 @@ final class KanaKanjiConverter
 
 		$lattice = $this->buildLattice($hiragana, $entriesByReading);
 		$this->loadConnectionCosts();
+		$forward = $this->forwardDp($lattice);
 
-		$forward    = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
+		// ★ nbest=1 のときは A* を完全スキップ
+		$best = $this->backtrackBest($lattice, $forward['costs'], $forward['prev']);
 
-		$best = $candidates[0] ?? [
-			'text'   => $hiragana,
-			'tokens' => [[
-				'surface'   => $hiragana,
-				'reading'   => $hiragana,
-				'word_cost' => 0,
-				'penalty'   => 0,
-				'pos'       => '名詞',
-				'subpos'    => '一般',
-				'pos_label' => '名詞-一般',
-			]],
-			'cost' => 0,
-		];
+		if ($best === null) {
+			$best = [
+				'text'   => $hiragana,
+				'tokens' => [[
+					'surface'   => $hiragana,
+					'reading'   => $hiragana,
+					'word_cost' => 0,
+					'penalty'   => 0,
+					'pos'       => '名詞',
+					'subpos'    => '一般',
+					'pos_label' => '名詞-一般',
+				]],
+				'cost' => 0,
+			];
+		}
+
+		$candidates = [$best];
+
+		// ★ 2候補目以降はオプション
+		if ($nbest > 1) {
+			$astarCandidates = $this->backwardAStar(
+				$lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest
+			);
+			if (!empty($astarCandidates)) {
+				$candidates = $astarCandidates;
+				$best = $candidates[0];
+			}
+		}
 
 		return ['best' => $best, 'candidates' => $candidates];
 	}
