@@ -590,6 +590,9 @@ final class SystemDictionary{
 			['reading' => 'きょういくか', 'surface' => '教育課', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'けいざいしゃ', 'surface' => '経済社', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'たいおうさく', 'surface' => '対応策', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'かつ', 'surface' => 'かつ', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'とり', 'surface' => '鳥', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 4000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'かつてない', 'surface' => 'かつてない', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			//['reading' => 'せいさく', 'surface' => '政策', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			//['reading' => 'すすめて', 'surface' => '進めて', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 

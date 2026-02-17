@@ -473,3 +473,9 @@ https://github.com/google/mozc
 https://www.edrdg.org/enamdict/enamdict_doc.html  
   
 `http://ftp.edrdg.org/pub/Nihongo/enamdict.gz`  
+
+
+# Others
+
+You can freely use the human discrimination datasets in `src/SystemDictionary.php` and `test/LongJapaneseTest.php`.  
+However, there is a tendency for the notation to fluctuate, so you need to be careful.  
