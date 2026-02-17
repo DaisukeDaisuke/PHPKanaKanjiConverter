@@ -39,7 +39,7 @@ final class KanaKanjiConverter
 		$this->loadConnectionCosts();
 
 		$forward = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $nbest);
+		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
 
 		$best = $candidates[0] ?? [
 			'text' => $hiragana,
@@ -207,6 +207,7 @@ final class KanaKanjiConverter
 		$count = count($nodes);
 		$costs = array_fill(0, $count, self::INF);
 		$prev = array_fill(0, $count, -1);
+		$prevPrev = array_fill(0, $count, -1);  // 前々ノードIDを追加
 		$costs[$bos] = 0;
 
 		for ($pos = 0; $pos <= $len; $pos++) {
@@ -232,8 +233,34 @@ final class KanaKanjiConverter
 						continue;
 					}
 
+					// 基本的な接続コスト（2連）
 					$edgeCost = $this->getConnectionCost($nodes[$prevId]['right_id'], $nodes[$nextId]['left_id']);
-					$cost = $costs[$prevId] + $edgeCost + $nodes[$nextId]['cost'];
+
+					// 3連チェック
+					$tripletAdj = 0;
+					if ($prev[$prevId] !== -1) {
+						$prevPrevId = $prev[$prevId];
+						$tripletAdj = $this->getPosIndex()->getTripletAdjustment(
+							$nodes[$prevPrevId]['right_id'],
+							$nodes[$prevId]['right_id'],
+							$nodes[$nextId]['left_id']
+						);
+					}
+
+					// 4連チェック
+					$quadrupletAdj = 0;
+					if ($prev[$prevId] !== -1 && $prevPrev[$prevId] !== -1) {
+						$prevPrevId = $prev[$prevId];
+						$prevPrevPrevId = $prevPrev[$prevId];
+						$quadrupletAdj = $this->getPosIndex()->getQuadrupletAdjustment(
+							$nodes[$prevPrevPrevId]['right_id'],
+							$nodes[$prevPrevId]['right_id'],
+							$nodes[$prevId]['right_id'],
+							$nodes[$nextId]['left_id']
+						);
+					}
+
+					$cost = $costs[$prevId] + $edgeCost + $nodes[$nextId]['cost'] + $tripletAdj + $quadrupletAdj;
 
 					if (
 						$nodes[$prevId]['left_id'] === 0 &&
@@ -245,6 +272,7 @@ final class KanaKanjiConverter
 					if ($cost < $costs[$nextId]) {
 						$costs[$nextId] = $cost;
 						$prev[$nextId] = $prevId;
+						$prevPrev[$nextId] = $prev[$prevId];  // 前々ノードを記録
 					}
 				}
 			}
@@ -253,10 +281,11 @@ final class KanaKanjiConverter
 		return [
 			'costs' => $costs,
 			'prev' => $prev,
+			'prevPrev' => $prevPrev,  // 追加
 		];
 	}
 
-	private function backwardAStar(array $lattice, array $bestCosts, int $nbest): array
+	private function backwardAStar(array $lattice, array $bestCosts, array $prevArray, array $prevPrevArray, int $nbest): array
 	{
 		$nodes = $lattice['nodes'];
 		$nodesByEnd = $lattice['nodesByEnd'];
@@ -297,8 +326,10 @@ final class KanaKanjiConverter
 					continue;
 				}
 
+				// 基本的な接続コスト（2連）
 				$edgeCost = $this->getConnectionCost($nodes[$prevId]['right_id'], $nodes[$nodeId]['left_id']);
-				$newBackCost = $data['backCost'] + $nodes[$nodeId]['cost'] + $edgeCost;
+
+				$newBackCost = $data['backCost'] + $nodes[$nodeId]['cost'] + $edgeCost; // tripletAdj, quadrupletAdj を削除
 				$priority = $newBackCost + $bestCosts[$prevId];
 
 				$newPath = $data['path'];
@@ -447,7 +478,7 @@ final class KanaKanjiConverter
 		$this->loadConnectionCosts();
 
 		$forward    = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $nbest);
+		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
 
 		$best = $candidates[0] ?? [
 			'text'   => $hiragana,

@@ -31,10 +31,10 @@ final class PosIndex
 			'名詞-一般'       => -100,
 			'名詞-固有名詞'   => -100,
 		],
+		//一部エッジケースでだめ
 		'助詞-格助詞' => [
-			//'動詞-自立' => -500,
-			'名詞-形容動詞語幹' => +200,
-			'動詞-自立' => +300,
+			'名詞-形容動詞語幹' => +800,  // +200から+800に強化（「がフル」を防ぐ）
+			'動詞-自立' => -400,           // 新規: 格助詞+動詞を優遇（「を言う」「が降る」等）
 		],
 		'名詞-接尾' => [
 			'助詞-連体化' => +3000,
@@ -43,7 +43,7 @@ final class PosIndex
 			'名詞-一般' => +400,
 		],
 		'名詞-数' => [
-			'名詞-接尾'       => -800,
+			//'名詞-接尾'       => -800,
 			'名詞-一般'       => +800,
 			'名詞-固有名詞' => +1500,
 			'名詞-固有名詞-人名' => +4000,
@@ -60,6 +60,87 @@ final class PosIndex
 		],
 		'動詞-自立' => [
 			'助動詞' => -500,
+		],
+	];
+
+	// 3連品詞連鎖パターン：[品詞1][品詞2][品詞3] => 加算コスト
+	// 例：「経験を生かす」「手を振る」などの自然な組み合わせを優遇
+	private const CHAIN_TRIPLET = [
+		'BOS' => [
+			'名詞-一般' => [
+				'助詞-格助詞' => -400,  // 「○○を」で始まる文
+				'助詞-連体化' => -300,  // 「○○の」で始まる文
+			],
+			'名詞-副詞可能' => [
+				'名詞-一般' => -500,     // 「今日天気」など
+				'助詞-格助詞' => -300,   // 「今日を」など
+			],
+		],
+		'名詞-一般' => [
+			//誤変換が増える
+			'助詞-格助詞' => [
+				'動詞-自立' => -600,     // 「手を振る」「経験を生かす」などの基本パターン
+				'名詞-副詞可能' => +1500,  // 不自然な組み合わせ
+				'名詞-サ変接続' => -400,  // 「会議を開催」など//
+			],
+			'助詞-連体化' => [
+				'名詞-一般' => -300,      // 「時の流れ」など
+				'動詞-自立' => +1000,     // 「時の振る」など不自然
+			],
+		],
+		'名詞-サ変接続' => [
+			'助詞-格助詞' => [
+				'動詞-自立' => 0,        // +500から0に戻す（ニュートラル）
+				'名詞-一般' => +800,
+			],
+		],
+		'動詞-自立' => [
+			'助詞-接続助詞' => [
+				'動詞-自立' => -400,      // 「行って見る」など
+				'名詞-一般' => -200,      // 「行って場所」など
+			],
+			'助詞-格助詞' => [
+				'動詞-自立' => -300,      // 「言って行く」など
+			],
+		],
+		'助詞-格助詞' => [
+			'動詞-自立' => [
+				'助詞-接続助詞' => -500,  // 「を振って」「を言って」など
+				'助動詞' => -400,         // 「を振った」「を言った」など
+			],
+		],
+		// 新規追加: 特定の動詞との相性
+		'助詞-連体化' => [
+			'名詞-サ変接続' => -300,    // 「の設計」「の医療」等を優遇
+		],
+	];
+
+	// 4連品詞連鎖パターン：[品詞1][品詞2][品詞3][品詞4] => 加算コスト
+	// より長い文脈での自然な組み合わせを優遇
+	private const CHAIN_QUADRUPLET = [
+		'BOS' => [
+			'名詞-一般' => [
+				'助詞-格助詞' => [
+					'動詞-自立' => -500,    // 「手を振る」などの文頭パターン
+					'名詞-サ変接続' => -400, // 「会議を開催」など
+				],
+			],
+		],
+		'名詞-一般' => [
+			'助詞-格助詞' => [
+				'動詞-自立' => [
+					'助詞-接続助詞' => -300,  // -600から-300に弱める
+					'助動詞' => -200,         // -500から-200に弱める
+				],
+			],
+		],
+		'名詞-サ変接続' => [
+			'助詞-格助詞' => [
+				'動詞-自立' => [
+					'助動詞' => +1000,        // 「サヨナラを行った」等を強くペナルティ
+					'助詞-接続助詞' => +1000, // 「サヨナラを行って」等も
+				],
+			],
 		],
 	];
 
@@ -104,7 +185,7 @@ final class PosIndex
 	}
 
 	/**
-	 * 品詞連鎖ボーナス/ペナルティを返す
+	 * 品詞連鎖ボーナス/ペナルティを返す（2連）
 	 * @param int $prevRightId  前ノードのright_id（0=BOS）
 	 * @param int $nextLeftId   次ノードのleft_id
 	 */
@@ -122,6 +203,64 @@ final class PosIndex
 		$prevPos = $prevRightId === 0 ? 'BOS' : $this->getPos($prevRightId)['pos'];
 		if (isset(self::CHAIN_BONUS[$prevPos][$nextLabel])) {
 			return self::CHAIN_BONUS[$prevPos][$nextLabel];
+		}
+
+		return 0;
+	}
+
+	/**
+	 * 3連品詞連鎖のボーナス/ペナルティを返す
+	 * @param int $pos1RightId  1つ目のノードのright_id（0=BOS）
+	 * @param int $pos2RightId  2つ目のノードのright_id
+	 * @param int $pos3LeftId   3つ目のノードのleft_id
+	 */
+	public function getTripletAdjustment(int $pos1RightId, int $pos2RightId, int $pos3LeftId): int
+	{
+		$pos1Label = $pos1RightId === 0 ? 'BOS' : $this->getPos($pos1RightId)['label'];
+		$pos2Label = $this->getPos($pos2RightId)['label'];
+		$pos3Label = $this->getPos($pos3LeftId)['label'];
+
+		// 完全一致で探す
+		if (isset(self::CHAIN_TRIPLET[$pos1Label][$pos2Label][$pos3Label])) {
+			return self::CHAIN_TRIPLET[$pos1Label][$pos2Label][$pos3Label];
+		}
+
+		// 部分一致（pos1のみ簡略化）
+		$pos1 = $pos1RightId === 0 ? 'BOS' : $this->getPos($pos1RightId)['pos'];
+		if (isset(self::CHAIN_TRIPLET[$pos1][$pos2Label][$pos3Label])) {
+			return self::CHAIN_TRIPLET[$pos1][$pos2Label][$pos3Label];
+		}
+
+		return 0;
+	}
+
+	/**
+	 * 4連品詞連鎖のボーナス/ペナルティを返す
+	 * @param int $pos1RightId  1つ目のノードのright_id（0=BOS）
+	 * @param int $pos2RightId  2つ目のノードのright_id
+	 * @param int $pos3RightId  3つ目のノードのright_id
+	 * @param int $pos4LeftId   4つ目のノードのleft_id
+	 */
+	public function getQuadrupletAdjustment(
+		int $pos1RightId,
+		int $pos2RightId,
+		int $pos3RightId,
+		int $pos4LeftId
+	): int {
+		$pos1Label = $pos1RightId === 0 ? 'BOS' : $this->getPos($pos1RightId)['label'];
+		$pos2Label = $this->getPos($pos2RightId)['label'];
+		$pos3Label = $this->getPos($pos3RightId)['label'];
+		$pos4Label = $this->getPos($pos4LeftId)['label'];
+
+		// 完全一致で探す
+		if (isset(self::CHAIN_QUADRUPLET[$pos1Label][$pos2Label][$pos3Label][$pos4Label])) {
+			return self::CHAIN_QUADRUPLET[$pos1Label][$pos2Label][$pos3Label][$pos4Label];
+		}
+
+		// 部分一致（pos1のみ簡略化）
+		$pos1 = $pos1RightId === 0 ? 'BOS' : $this->getPos($pos1RightId)['pos'];
+		if (isset(self::CHAIN_QUADRUPLET[$pos1][$pos2Label][$pos3Label][$pos4Label])) {
+			return self::CHAIN_QUADRUPLET[$pos1][$pos2Label][$pos3Label][$pos4Label];
 		}
 
 		return 0;
