@@ -34,18 +34,14 @@ $dict->addAll([
 $converter->registerUserDict('server', $dict);
 
 
+$time = microtime(true);
 
 //English is not supported
-foreach(["a", "きょうのてんきははれですごしやすいですきょうのてんきははれですごしやすいですきょうのてんきははれですごしやすいですきょうのてんきははれですごしやすいですきょうのてんきははれですごしやすいですきょうのてんきははれですごしやすいです"] as $input){
-	$time = microtime(true);
-
+foreach(["surukedo"] as $input){
 	$result = $converter->convert($input);
 
-	$time = microtime(true) - $time;
 
-	echo "Time: {$time} sec\n";
-
-	//var_dump($result["best"]["tokens"]);
+	var_dump($result["best"]["tokens"]);
 
 	//var_dump($result["kana"]);
 
@@ -61,7 +57,9 @@ foreach(["a", "きょうのてんきははれですごしやすいですきょ�
 	echo "no-maru:". $result["best"]["text"], "\n";
 	//var_dump($result["best"]["tokens"]);
 }
+$time = microtime(true) - $time;
 
+echo "Time: {$time} sec\n";
 
 echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
 echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";
