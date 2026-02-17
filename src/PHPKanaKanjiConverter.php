@@ -67,7 +67,6 @@ final class PHPKanaKanjiConverter
 		$mergeEntries  = $this->collectEntries(UserDictionary::MODE_MERGE);
 		$serverEntries = $this->collectEntries(UserDictionary::MODE_SERVER);
 
-		$hasUserEntries = ($mergeEntries !== [] || $serverEntries !== []);
 		if((count($mergeEntries) + count($serverEntries)) !== 0){
 			// MERGE / SERVER: 内蔵辞書 + ユーザー辞書でマージ変換
 			$userEntries = array_merge($mergeEntries, $serverEntries);
@@ -241,9 +240,7 @@ final class PHPKanaKanjiConverter
 		foreach ($this->userDicts as $dict) {
 			// getAll() で全エントリを走査し、読み正規化して比較
 			foreach ($dict->getAll() as $entry) {
-				if (!in_array($entry['mode'], [
-					UserDictionary::MODE_REPLACE,
-				], true)) {
+				if ($entry['mode'] !== UserDictionary::MODE_REPLACE) {
 					continue;
 				}
 				$normalizedReading = $this->normalizeReading($entry['reading']);

@@ -5,6 +5,23 @@ Vibe coded romaji to hiragana to kanji conversion
 > [!CAUTION]
 > Vibe coded!!!!!
 
+# What is this?
+This library converts romaji to hiragana and kanji.  
+However, because it does not understand the text, it may produce worse results than advanced IMEs.  
+
+# the purpose
+There may be cases where users want to convert Romanized input offline using an IME.
+```
+kilyouhaharedesu
+```
+This library enables it using pure PHP.
+```
+今日は晴れです
+```
+
+# Requirement
+PHP 8.0 or later and mbstring extension
+
 # usage
 
 ```php
@@ -63,6 +80,7 @@ echo $result["best"]["text"], "\n";
 declare(strict_types=1);
 
 use kanakanjiconverter\PHPKanaKanjiConverter;
+use kanakanjiconverter\UserDictionary;
 
 include __DIR__ . '/vendor/autoload.php';
 
@@ -70,32 +88,213 @@ $basemem = memory_get_usage();
 $basemem1 = memory_get_peak_usage();
 $converter = new PHPKanaKanjiConverter();
 
-foreach(["server", "konn", "sinnkannsenn", "converterですか"] as $input){
+$dict = new UserDictionary();
+$dict->addAll([
+	// 「eremenntox」→ toHiragana → 「えれめんとx」だが x は変換されないため
+	// removeIllegalFlag=true にするか、reading を「えれめんと」にして別途処理する
+	['reading' => 'eremenntox', 'surface' => 'ElementX',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
+	// 「sod」→ 「そd」 → d が残るため reading は「そ」にするか入力を「sodo」等にする
+		[
+			'reading'   => 'anni',
+			'surface'   => 'Annihilation',
+			'mode'      => UserDictionary::MODE_SERVER,
+			'word_cost' => 2000,
+			'pos'       => '名詞',
+			'subpos'    => '一般',
+			'pos_label' => '名詞-一般',
+			'left_id'   => 1852,
+			'right_id'  => 1852,
+		],
+	//['reading' => 'sod',       'surface' => 'SOD SERVER',  'mode' => UserDictionary::MODE_REPLACE,'word_cost' => -5000, 'pos' => "名詞"],
+]);
+
+$converter->registerUserDict('server', $dict);
+
+
+$time = microtime(true);
+
+//English is not supported
+foreach(["kannzeidekilyogisinnkokuwosaigennsurudoramagaarimasu","server", "konn", "sinnkannsenn", "converterですか", "annigasuki", "anninnsuto-ru"] as $input){
 	$result = $converter->convert($input);
 
-	if(preg_match('/[A-Za-z]/u', $result["best"]["text"])){
-		echo $result["original"], "\n";
-		continue;
-	}
+
+	//var_dump($result["kana"]);
 
 	if(!$converter->isValid($result)){
-		echo $result["kana"], "\n";
+		echo "kana: ".$result["kana"], "\n";
 		continue;
 	}
 
-	echo $result["best"]["text"], "\n";
+	echo "no-maru:". $result["best"]["text"], "\n";
+	//var_dump($result["best"]["tokens"]);
 }
+$time = microtime(true) - $time;
+
+echo "Time: {$time} sec\n";
+
 echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
 echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";
+
 ```
 
 ### result
 
 ```php
-server
-こん
-新幹線
-converterですか
+no-maru:関税で虚偽申告を再現するドラマがあります
+no-maru:せrヴェr
+kana: こん
+no-maru:新幹線
+no-maru:今ヴェrてrですか
+no-maru:Annihilationが好き
+no-maru:アンインストール
+Time: 0.10237002372742 sec
+124.99425506592 MB
+123.27954101562 MB
+```
+
+# treedumping
+
+```php
+<?php
+declare(strict_types=1);
+
+use kanakanjiconverter\PHPKanaKanjiConverter;
+use kanakanjiconverter\UserDictionary;
+
+include __DIR__ . '/vendor/autoload.php';
+
+$time = microtime(true);
+$basemem = memory_get_usage();
+$basemem1 = memory_get_peak_usage();
+$converter = new PHPKanaKanjiConverter();
+$input = "gaitametoennsouba";
+$result = $converter->convert($input);
+//var_dump($result["kana"]);
+
+if(!$converter->isValid($result)){
+	echo "kana: ".$result["kana"], "\n";
+	return;
+}
+
+echo "no-maru:". $result["best"]["text"], "\n";
+
+foreach($result["best"]["tokens"] as $item){
+	var_dump($item);
+}
+
+$time = microtime(true) - $time;
+
+echo "Time: {$time} sec\n";
+
+echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
+echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";```
+
+```
+
+## result
+```
+no-maru:外為と円相場
+array(7) {
+  ["surface"]=>
+  string(6) "外為"
+  ["reading"]=>
+  string(12) "がいため"
+  ["word_cost"]=>
+  int(6485)
+  ["penalty"]=>
+  int(0)
+  ["pos"]=>
+  string(6) "名詞"
+  ["subpos"]=>
+  string(6) "一般"
+  ["pos_label"]=>
+  string(13) "名詞-一般"
+}
+array(7) {
+  ["surface"]=>
+  string(3) "と"
+  ["reading"]=>
+  string(3) "と"
+  ["word_cost"]=>
+  int(0)
+  ["penalty"]=>
+  int(1000)
+  ["pos"]=>
+  string(6) "助詞"
+  ["subpos"]=>
+  string(12) "並立助詞"
+  ["pos_label"]=>
+  string(19) "助詞-並立助詞"
+}
+array(7) {
+  ["surface"]=>
+  string(9) "円相場"
+  ["reading"]=>
+  string(15) "えんそうば"
+  ["word_cost"]=>
+  int(6976)
+  ["penalty"]=>
+  int(0)
+  ["pos"]=>
+  string(6) "名詞"
+  ["subpos"]=>
+  string(6) "一般"
+  ["pos_label"]=>
+  string(13) "名詞-一般"
+}
+Time: 0.051853179931641 sec
+124.31408691406 MB
+123.28768157959 MB
+```
+
+# multiresult
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use kanakanjiconverter\PHPKanaKanjiConverter;
+
+include __DIR__ . '/vendor/autoload.php';
+
+$time = microtime(true);
+$basemem = memory_get_usage();
+$basemem1 = memory_get_peak_usage();
+$converter = new PHPKanaKanjiConverter();
+$input = "konoraiburarihamainnkurahutonotamenitukuraremasita";
+$result = $converter->convert($input, false, 5);//Number of pieces
+//var_dump($result["kana"]);
+
+if(!$converter->isValid($result)){
+	echo "kana: " . $result["kana"], "\n";
+	return;
+}
+
+echo "no-maru:" . $result["best"]["text"], "\n";
+
+foreach($result["candidates"] as $item){
+	var_dump($item["text"]);
+}
+
+$time = microtime(true) - $time;
+
+echo "Time: {$time} sec\n";
+
+echo ((memory_get_peak_usage() - $basemem) / 1024 / 1024) . " MB\n";
+echo ((memory_get_usage() - $basemem1) / 1024 / 1024) . " MB\n";
+```
+
+## result
+
+```
+no-maru:このライブラリはマインクラフトの為に作られました
+string(72) "このライブラリはマインクラフトの為に作られました"
+string(75) "このライブラリはマインクラフトのために作られました"
+string(72) "このライブラリはマインクラフトの為に造られました"
+Time: 0.063277006149292 sec
+124.9249420166 MB
+123.29665374756 MB
 ```
 
 # benchmark

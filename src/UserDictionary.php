@@ -166,7 +166,7 @@ final class UserDictionary
 		$merged = new self();
 
 		// reading + mode をキーに重複排除
-		/** @var array<string, array<string,mixed>> */
+		/** @var array<string, array<string,mixed>> $seen */
 		$seen = [];
 
 		foreach ($dicts as $dict) {

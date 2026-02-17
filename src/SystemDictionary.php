@@ -302,6 +302,28 @@ final class SystemDictionary{
 				'left_id'   => 577,
 				'right_id'  => 577,
 			],
+			[
+				'reading'   => 'ひんしつのむら',
+				'surface'   => '品質のむら',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => -2000,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,
+				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'もとに',
+				'surface'   => 'もとに',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 1000,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,
+				'right_id'  => 1852,
+			],
 		]);
 
 		$converter->registerUserDict("system_server", $dict);
