@@ -25,6 +25,7 @@ final class SystemDictionary{
 		$converter->registerUserDict("system_replace", $dict);
 
 
+		$dict = new UserDictionary();
 		$NOUN_GENERAL = 1852/* findPosId(id.def, '名詞','一般') 実値 */;//1852 名詞,一般,*,*,*,*,*
 		$ADVERB_GENERAL = 12/* '副詞','一般' の id */;//12 副詞,一般,*,*,*,*,*
 		$NOUN_PRONOUN = 1900/* '名詞','代名詞' の id */;//1900 名詞,代名詞,一般,*,*,*,*
@@ -349,8 +350,34 @@ final class SystemDictionary{
 
 			// 2. 「撮る」を優遇
 			[
+				'reading'   => 'をとる',
+				'surface'   => 'を撮る',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 1500,  // 取る(2398)より低く
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 837,   // 動詞,自立,*,*,五段動詞,基本形
+				'right_id'  => 837,
+			],
+
+			// 2. 「撮る」を優遇
+			[
+				'reading'   => 'にとる',
+				'surface'   => 'に取る',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 2000,  // 取る(2398)より低く
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 837,   // 動詞,自立,*,*,五段動詞,基本形
+				'right_id'  => 837,
+			],
+
+			// 2. 「撮る」を優遇
+			[
 				'reading'   => 'とる',
-				'surface'   => '撮る',
+				'surface'   => '採る',
 				'mode'      => UserDictionary::MODE_SERVER,
 				'word_cost' => 2000,  // 取る(2398)より低く
 				'pos'       => '動詞',
@@ -411,6 +438,130 @@ final class SystemDictionary{
 				'left_id'   => 1852,  // 名詞,一般
 				'right_id'  => 1852,
 			],
+			[
+				'reading'   => 'かわを',
+				'surface'   => '皮を',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 3900,  // 皮(4195)より低く
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'かわ',
+				'surface'   => '革',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 4000,  // 皮(4195)より低く
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'さみしい',
+				'surface'   => '寂しい',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 2800,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
+			[
+				'reading'   => 'もの',
+				'surface'   => '物',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 2800,
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
+			// 一桁の数字
+			['reading' => 'いち', 'surface' => '1', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数', 'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'にい', 'surface' => '2', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',  'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'さん', 'surface' => '3', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',  'word_cost' => 800,  'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'し', 'surface' => '4', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ご', 'surface' => '5', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',  'word_cost' => 800,  'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ろく', 'surface' => '6', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ごろく', 'surface' => '56', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'なな', 'surface' => '7', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'しち', 'surface' => '7', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'はち', 'surface' => '8', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'きゅう', 'surface' => '9', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅう', 'surface' => '10', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 800, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ぜろ', 'surface' => '0', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+
+//			['reading' => 'にゅう', 'surface' => '20', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'さんじゅう', 'surface' => '30', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'よんじゅう', 'surface' => '40', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'ごじゅう', 'surface' => '50', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'ろくじゅう', 'surface' => '60', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'ななじゅう', 'surface' => '70', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'ひちじゅう', 'surface' => '70', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+//			['reading' => 'はちじゅう', 'surface' => '80', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',   'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+
+			//~人
+			['reading' => 'ごにん', 'surface' => '5人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'いちにん', 'surface' => '1人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ににん', 'surface' => '2人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'さんにん', 'surface' => '3人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'よにん', 'surface' => '4人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ごにん', 'surface' => '5人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ろくにん', 'surface' => '6人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ななにん', 'surface' => '7人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ひちにん', 'surface' => '7人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'はちにん', 'surface' => '8人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'きゅうにん', 'surface' => '9人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうにん', 'surface' => '10人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅういちにん', 'surface' => '11人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうににん', 'surface' => '12人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうさんにん', 'surface' => '13人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうよにん', 'surface' => '14人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうごにん', 'surface' => '15人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうろくにん', 'surface' => '16人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうななにん', 'surface' => '17人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうはちにん', 'surface' => '18人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうきゅうにん', 'surface' => '19人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'にじゅうにんにん', 'surface' => '20人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'にゅういちにん', 'surface' => '21人', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+
+			//~匹
+			['reading' => 'ごひき', 'surface' => '5匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'いっぴき', 'surface' => '1匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'にひき', 'surface' => '2匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'さんぴき', 'surface' => '3匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'よんぴき', 'surface' => '4匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ごひき', 'surface' => '5匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ろくひき', 'surface' => '6匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'ななひき', 'surface' => '7匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'はちぴき', 'surface' => '8匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'きゅうぴき', 'surface' => '9匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅっぴき', 'surface' => '10匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅういっぴき', 'surface' => '11匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうにひき', 'surface' => '12匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうさんぴき', 'surface' => '13匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうよんぴき', 'surface' => '14匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうごひき', 'surface' => '15匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうごろっぴき', 'surface' => '16匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうななひき', 'surface' => '17匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうはっぴき', 'surface' => '18匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'じゅうきゅうぴき', 'surface' => '19匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'にじゅっぴき', 'surface' => '20匹', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'むく', 'surface' => 'むく', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',   'word_cost' => -100, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+
+			['reading' => 'ひゃく', 'surface' => '百', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数', 'subpos3' => '百', 'word_cost' => 1000, 'left_id' => 2054, 'right_id' => 2054, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'せん', 'surface' => '千', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数', 'subpos3' => '千',  'word_cost' => 1000,'left_id' => 2051, 'right_id' => 2051, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'まん', 'surface' => '万', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数', 'subpos3' => '万', 'word_cost' => 1000, 'left_id' => 2046, 'right_id' => 2046, 'mode'      => UserDictionary::MODE_SERVER,],
+
+			['reading' => 'ひゃくまん', 'surface' => '百万', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',  'word_cost' => 1000,'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'いっせんまん', 'surface' => '一千万', 'pos' => '名詞', 'subpos' => '数', 'pos_label' => '名詞-数',  'word_cost' => 1000, 'left_id' => 2045, 'right_id' => 2045, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'のねこ', 'surface' => 'の猫', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 5000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 		]);
 
 		$converter->registerUserDict("system_server", $dict);

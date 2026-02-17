@@ -64,12 +64,11 @@ final class PHPKanaKanjiConverter
 
 		// Step3: 漢字変換 --- ユーザーエントリをマージ ---
 		// MODE_KANA_ALT / MODE_MERGE / MODE_SERVER をまとめて収集
-		$mergeEntries  = $this->collectEntries(UserDictionary::MODE_MERGE);
 		$serverEntries = $this->collectEntries(UserDictionary::MODE_SERVER);
 
-		if((count($mergeEntries) + count($serverEntries)) !== 0){
+		if((count($serverEntries)) !== 0){
 			// MERGE / SERVER: 内蔵辞書 + ユーザー辞書でマージ変換
-			$userEntries = array_merge($mergeEntries, $serverEntries);
+			$userEntries = $serverEntries;
 			$result = $this->kannziconverter->convertWithUserEntries(
 				$kana,
 				$userEntries,
