@@ -575,7 +575,6 @@ final class SystemDictionary{
 			['reading' => 'けんこう', 'surface' => '健康', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'けんこうこつ', 'surface' => '肩甲骨', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'すんだら', 'surface' => '済んだら', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
-			['reading' => 'すんだら', 'surface' => '済んだら', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'かんりかの', 'surface' => '管理下の', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'れいを', 'surface' => '例を', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'れいの', 'surface' => '例の', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
@@ -588,6 +587,9 @@ final class SystemDictionary{
 			['reading' => 'そんちょうは', 'surface' => '村長は', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'かんりようの', 'surface' => '管理用の', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'かんりようで', 'surface' => '管理用で', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'きょういくか', 'surface' => '教育課', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'けいざいしゃ', 'surface' => '経済社', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+			['reading' => 'たいおうさく', 'surface' => '対応策', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			//['reading' => 'せいさく', 'surface' => '政策', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			//['reading' => 'すすめて', 'surface' => '進めて', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 
