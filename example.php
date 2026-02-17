@@ -37,7 +37,7 @@ $converter->registerUserDict('server', $dict);
 $time = microtime(true);
 
 //English is not supported
-foreach(["きょうはいいてんきです", "まいにちうんどうすることをすすめます", "して、よりよりまちづくりをしましょう", "かわのせせらぎ", "しゃしんをとるときは", "りかいしてからいんをおしてください", "さよならいったあと", "いままでのけいけんをいかして"] as $input){
+foreach(["ぎっくりごしでこしがいった"] as $input){
 	$result = $converter->convert($input);
 
 

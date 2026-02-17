@@ -324,6 +324,80 @@ final class SystemDictionary{
 				'left_id'   => 1852,
 				'right_id'  => 1852,
 			],
+			[
+				'reading'   => 'すること',
+				'surface'   => 'すること',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => -500,  // むしろボーナスを与えて優先的に選ばせる
+				'pos'       => '名詞',
+				'subpos'    => '非自立',
+				'pos_label' => '名詞-非自立',
+				'left_id'   => 2065,  // 名詞-非自立のID（要確認）
+				'right_id'  => 2065,
+			],
+			[
+				'reading'   => 'すすめ',
+				'surface'   => '勧め',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 2200,  // 2701(進め)より低く設定
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 701,   // 動詞,自立,*,*,一段,連用形
+				'right_id'  => 701,
+			],
+
+			// 2. 「撮る」を優遇
+			[
+				'reading'   => 'とる',
+				'surface'   => '撮る',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 2000,  // 取る(2398)より低く
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 837,   // 動詞,自立,*,*,五段動詞,基本形
+				'right_id'  => 837,
+			],
+
+			// 3. 「印」を優遇
+			[
+				'reading'   => 'いん',
+				'surface'   => '印',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 3500,  // イン(3922)より低く
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
+
+			// 4. 「言っ」を優遇
+			[
+				'reading'   => 'いっ',
+				'surface'   => '言っ',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => -250,  // 元の0よりさらに低く、行っ(43)より大幅に低く
+				'pos'       => '動詞',
+				'subpos'    => '自立',
+				'pos_label' => '動詞-自立',
+				'left_id'   => 828,   // 動詞,自立,*,*,五段・ワ行促音便,連用タ接続
+				'right_id'  => 828,
+			],
+
+			// 5. 「川」を優遇
+			[
+				'reading'   => 'かわ',
+				'surface'   => '川',
+				'mode'      => UserDictionary::MODE_SERVER,
+				'word_cost' => 3900,  // 皮(4195)より低く
+				'pos'       => '名詞',
+				'subpos'    => '一般',
+				'pos_label' => '名詞-一般',
+				'left_id'   => 1852,  // 名詞,一般
+				'right_id'  => 1852,
+			],
 		]);
 
 		$converter->registerUserDict("system_server", $dict);
