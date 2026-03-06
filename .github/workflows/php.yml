@@ -41,3 +41,10 @@ jobs:
 
     - name: PHPUnit test
       run: vendor/bin/phpunit test
+
+    - name: Save Composer cache
+      if: always() && steps.composer-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: vendor
+        key: ${{ steps.composer-cache.outputs.cache-primary-key }}
