@@ -40,7 +40,6 @@ final class SystemDictionary{
 			['reading' => 'ty',  	'surface' => 'Thank you',  'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'wtf',  	'surface' => 'wtf',  'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'nex',  	'surface' => 'Nexus',  'mode' => UserDictionary::MODE_REPLACE],
-			['reading' => 'np',  	'surface' => 'No problem',  'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'omg',  	'surface' => 'oh my god',  'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'report',  	'surface' => 'report',  'mode' => UserDictionary::MODE_REPLACE],
 			['reading' => 'melon',  	'surface' => 'melon',  'mode' => UserDictionary::MODE_REPLACE],
