@@ -1,0 +1,4 @@
+src/dictionary_oss/dictionary*.txt text eol=lf
+src/dictionary_oss/dictionary.idx -text
+src/dictionary_oss/dictionary.str -text
+src/dictionary_oss/connection.bin -text

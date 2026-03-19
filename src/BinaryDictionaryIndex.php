@@ -56,7 +56,7 @@ final class BinaryDictionaryIndex
 		// reserved 8バイトはスキップ（ヘッダ計12バイト）
 
 		// 辞書ファイルも同様に一括読み込み
-		for ($i = 0; $i <= 9; $i++) {
+		for ($i = 0; $i <= 10; $i++) {
 			$fname = $this->baseDir . DIRECTORY_SEPARATOR . sprintf('dictionary%02d.txt', $i);
 			if (is_file($fname)) {
 				$this->dictStreams[$i] = new BinaryStream((string)file_get_contents($fname));
