@@ -41,7 +41,9 @@ final class KanaKanjiConverter
 		$this->loadConnectionCosts();
 
 		$forward = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
+		$candidates = $nbest === 1
+			? [$this->buildBestCandidate($lattice, $forward['costs'], $forward['prev'])]
+			: $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
 
 		$best = $candidates[0] ?? [
 			'text' => $hiragana,
@@ -372,6 +374,20 @@ final class KanaKanjiConverter
 		return $results;
 	}
 // プロパティ追加
+	private function buildBestCandidate(array $lattice, array $costs, array $prev): array
+	{
+		$eos = $lattice['eos'];
+		$path = [$eos];
+		$current = $eos;
+
+		while (isset($prev[$current]) && $prev[$current] !== -1) {
+			$current = $prev[$current];
+			$path[] = $current;
+		}
+
+		return $this->buildCandidate($path, $lattice['nodes'], $costs[$eos] ?? 0);
+	}
+
 	private ?PosIndex $posIndex = null;
 
 	private function getPosIndex(): PosIndex
@@ -503,7 +519,9 @@ final class KanaKanjiConverter
 		$this->loadConnectionCosts();
 
 		$forward    = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
+		$candidates = $nbest === 1
+			? [$this->buildBestCandidate($lattice, $forward['costs'], $forward['prev'])]
+			: $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
 
 		$best = $candidates[0] ?? [
 			'text'   => $hiragana,
