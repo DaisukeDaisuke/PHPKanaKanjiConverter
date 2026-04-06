@@ -693,6 +693,18 @@ final class SystemDictionary{
 			//元号
 			['reading' => 'れいわ', 'surface' => '令和', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
 			['reading' => 'へいせい', 'surface' => '平成', 'pos' => '名詞', 'subpos' => '一般', 'pos_label' => '名詞-一般',  'word_cost' => 2000, 'left_id' => 1852, 'right_id' => 1852, 'mode'      => UserDictionary::MODE_SERVER,],
+
+			[
+				'reading' => 'よ',
+				'surface' => 'よ',
+				'pos' => '助詞',
+				'subpos' => '終助詞',
+				'pos_label' => '助詞-終助詞',
+				'word_cost' => 0,
+				'left_id' => 405,
+				'right_id' => 405,
+				'mode' => UserDictionary::MODE_SERVER,
+			],
 		]);
 
 		$converter->registerUserDict("system_server", $dict);
