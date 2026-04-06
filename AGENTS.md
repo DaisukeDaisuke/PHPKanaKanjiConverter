@@ -23,6 +23,7 @@
 * var_dump can cause phpstan to fail, so delete all instances you find. However, disabled var_dump instances are allowed, so do not perform a full search.
 * You don't need to submit me the line numbers you edited. I don't need to reread the file in the final submission just to know the line numbers. Because of Git, the filename alone is sufficient.
 * src/dictionary_oss is over 10MB, so don't read it.
+* ^Yesterday|^I peeled the skin|^I decided|^I want|^the cat|^I took a bite|^and held it down" src\dictionary_oss -g "dictionary*.txt" -S Do not perform searches like this.
 
 ## mcp server
 

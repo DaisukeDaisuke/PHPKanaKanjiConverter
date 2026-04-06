@@ -38,7 +38,7 @@ $converter->setTimeout(100 * 0.001);
 $time = microtime(true);
 
 //English is not supported
-foreach(["きょうのてんきははれきょうのてんきははれきょうのてんききょうのてんきょうのてんきははれきょうのてんきははれきょうのてんききょうのてんきははれ"] as $input){
+foreach(["まじでしやくしょいこうとしてるやん"] as $input){
 	$result = $converter->convert($input);
 
 

@@ -41,20 +41,35 @@ final class KanaKanjiConverter
 		$this->loadConnectionCosts();
 
 		$forward = $this->forwardDp($lattice);
-		$candidates = $this->backwardAStar($lattice, $forward['costs'], $forward['prev'], $forward['prevPrev'], $nbest);
+		$bestPath = $this->reconstructBestPath($forward['prev'], $lattice['bos'], $lattice['eos']);
+		$best = $this->buildCandidate($bestPath, $lattice['nodes']);
 
-		$best = $candidates[0] ?? [
-			'text' => $hiragana,
-			'tokens' => [
-				[
-					'surface' => $hiragana,
-					'reading' => $hiragana,
-					'word_cost' => 0,
-					'penalty' => 0,
-				],
-			],
-			'cost' => 0,
-		];
+		if ($nbest === 1) {
+			$candidates = [$best];
+		} else {
+			$candidates = $this->backwardAStar(
+				$lattice,
+				$forward['costs'],
+				$forward['prev'],
+				$forward['prevPrev'],
+				$nbest
+			);
+			$merged = [];
+			$seenText = [];
+			foreach (array_merge([$best], $candidates) as $candidate) {
+				if (isset($seenText[$candidate['text']])) {
+					continue;
+				}
+				$seenText[$candidate['text']] = true;
+				$merged[] = $candidate;
+			}
+			usort(
+				$merged,
+				static fn(array $a, array $b): int => ($a['cost'] <=> $b['cost']) ?: strcmp($a['text'], $b['text'])
+			);
+			$candidates = array_slice($merged, 0, $nbest);
+			$best = $candidates[0] ?? $best;
+		}
 
 		return [
 			'best' => $best,
@@ -335,7 +350,7 @@ final class KanaKanjiConverter
 			$nodeId = $data['nodeId'];
 
 			if ($nodeId === $bos) {
-				$candidate = $this->buildCandidate($data['path'], $nodes, $data['backCost']);
+				$candidate = $this->buildCandidate($data['path'], $nodes);
 				if (!isset($seenText[$candidate['text']])) {
 					$seenText[$candidate['text']] = true;
 					$results[] = $candidate;
@@ -369,7 +384,24 @@ final class KanaKanjiConverter
 			}
 		}
 
+		usort(
+			$results,
+			static fn(array $a, array $b): int => ($a['cost'] <=> $b['cost']) ?: strcmp($a['text'], $b['text'])
+		);
+
 		return $results;
+	}
+
+	private function reconstructBestPath(array $prev, int $bos, int $eos): array
+	{
+		$path = [];
+		for ($id = $eos; $id !== -1; $id = $prev[$id]) {
+			$path[] = $id;
+			if ($id === $bos) {
+				break;
+			}
+		}
+		return $path;
 	}
 // プロパティ追加
 	private ?PosIndex $posIndex = null;
@@ -396,12 +428,13 @@ final class KanaKanjiConverter
 // KanaKanjiConverter.php
 // buildCandidate() を以下に差し替え
 
-	private function buildCandidate(array $path, array $nodes, int $totalCost): array
+	private function buildCandidate(array $path, array $nodes): array
 	{
 		$ids      = array_reverse($path);
 		$text     = '';
 		$tokens   = [];
 		$posIndex = $this->getPosIndex();
+		$totalCost = $this->calculatePathCost($ids, $nodes);
 
 		foreach ($ids as $id) {
 			$node = $nodes[$id];
@@ -439,6 +472,46 @@ final class KanaKanjiConverter
 			'tokens' => $tokens,
 			'cost'   => $totalCost,
 		];
+	}
+
+	private function calculatePathCost(array $ids, array $nodes): int
+	{
+		$totalCost = 0;
+		$posIndex = $this->getPosIndex();
+		$count = count($ids);
+
+		for ($i = 1; $i < $count; $i++) {
+			$prevId = $ids[$i - 1];
+			$currentId = $ids[$i];
+			$prevRightId = $nodes[$prevId]['right_id'];
+			$currentLeftId = $nodes[$currentId]['left_id'];
+
+			$totalCost += $this->getConnectionCost($prevRightId, $currentLeftId);
+			$totalCost += $nodes[$currentId]['cost'];
+
+			if ($i >= 2) {
+				$totalCost += $posIndex->getTripletAdjustment(
+					$nodes[$ids[$i - 2]]['right_id'],
+					$prevRightId,
+					$currentLeftId
+				);
+			}
+
+			if ($i >= 3) {
+				$totalCost += $posIndex->getQuadrupletAdjustment(
+					$nodes[$ids[$i - 3]]['right_id'],
+					$nodes[$ids[$i - 2]]['right_id'],
+					$prevRightId,
+					$currentLeftId
+				);
+			}
+
+			if ($nodes[$prevId]['left_id'] === 0 && $currentLeftId === 0) {
+				$totalCost += 8000;
+			}
+		}
+
+		return $totalCost;
 	}
 
 // 追加するプロパティ
