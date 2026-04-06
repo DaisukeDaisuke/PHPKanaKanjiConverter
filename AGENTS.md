@@ -24,7 +24,8 @@
 * You don't need to submit me the line numbers you edited. I don't need to reread the file in the final submission just to know the line numbers. Because of Git, the filename alone is sufficient.
 * src/dictionary_oss is over 10MB, so don't read it.
 * ^Yesterday|^I peeled the skin|^I decided|^I want|^the cat|^I took a bite|^and held it down" src\dictionary_oss -g "dictionary*.txt" -S Do not perform searches like this.
-
+* When searching in the dictionary, use regular expressions like /\t宵\n/.
+* To check the character before conversion, use /して\t/.
 ## mcp server
 
 Use these tools if you feel it's necessary. Of course, it's perfectly fine to complete everything using only commands.
